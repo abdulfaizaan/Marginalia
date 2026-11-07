@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+:root {
+  --paper: #eef1f5;
+  --paper-soft: #f6f8fb;
+  --card: #ffffff;
+  --ink: #17273b;
+  --ink-soft: #38506b;
+  --muted: #66798d;
+  --line: #dfe5ec;
+  --accent: #2f5ff3;
+  --accent-soft: #eef2ff;
+  --accent-ink: #ffffff;
+  --chip-err-bg: #fbe9e5; --chip-err-ink: #9a3412;
+  --chip-q-bg: #e4f4e8;   --chip-q-ink: #1f5e37;
+  --chip-dir-bg: #e8edfb; --chip-dir-ink: #2c4a9e;
+  --chip-ch-bg: #fdf0e3;  --chip-ch-ink: #92400e;
+  --btn-dark: #22293b;
+  --code-bg: #f4f6f9;
+  --grid-dash: #9db3d6;
+}
+.dark {
+  --paper: #101623; --paper-soft: #151c2b; --card: #1a2233; --ink: #e7edf6; --ink-soft: #c3cede; --muted: #8fa1b8;
+  --line: #2a3550; --accent: #6b93ff; --accent-soft: #1e2a45; --accent-ink: #0d1420; --btn-dark: #e7edf6;
+  --chip-err-bg: #3b241f; --chip-err-ink: #f3b3a2; --chip-q-bg: #1d3226; --chip-q-ink: #9fdbb4;
+  --chip-dir-bg: #22304f; --chip-dir-ink: #aebff0; --chip-ch-bg: #40301b; --chip-ch-ink: #f0c791;
+  --code-bg: #223048; --grid-dash: #4b5f85;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-paper-soft: var(--paper-soft);
+  --color-card: var(--card);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-ink: var(--accent-ink);
+  --color-btn-dark: var(--btn-dark);
+  --color-code-bg: var(--code-bg);
+  --font-serif: "Newsreader", Georgia, "Times New Roman", serif;
+  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+html, body { height: 100%; }
+body { background: var(--paper); color: var(--ink); font-family: var(--font-sans); }
+
+/* Tiptap surface */
+.ProseMirror { outline: none; min-height: 200px; }
+.ProseMirror p { margin: 0 0 1.05em; }
+.ProseMirror p.margin-target { border-left: 3px solid var(--accent); padding-left: 10px; margin-left: -13px; }
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder); color: var(--muted); float: left; height: 0; pointer-events: none;
+}
+.ProseMirror code, .mg-doc code {
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-size: 0.84em; background: var(--code-bg); padding: 1.5px 5px; border-radius: 5px;
+}
+.ProseMirror img { max-width: 100%; border-radius: 8px; }
+
+/* margin number chip (decoration widget) */
+.mg-chip {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 19px; height: 19px; margin-left: 6px; border-radius: 999px;
+  font-size: 11px; font-weight: 700; color: #fff; background: var(--accent);
+  vertical-align: 2px; user-select: none; cursor: default;
+}
+
+::selection { background: color-mix(in srgb, var(--accent) 20%, transparent); }
+
+@media print { .no-print { display: none !important; } }

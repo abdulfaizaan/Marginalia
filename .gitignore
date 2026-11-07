@@ -1,0 +1,8 @@
+node_modules/
+.next/
+*.docx
+*.pdf
+.superpowers/
+data/
+.DS_Store
+.env
