@@ -1,4 +1,4 @@
-import { db, uid } from "@/lib/db";
+import { db, uid, parseSettings } from "@/lib/db";
 import { getSessionUser, jsonError } from "@/lib/auth";
 import { marginNotes } from "@/lib/providers";
 import { TIERS, type Plan } from "@/lib/plans";
@@ -12,7 +12,12 @@ export async function GET(req: Request, ctx: Ctx) {
   const user = await getSessionUser();
   if (!user) return jsonError(401, "Sign in first.");
   const { id } = await ctx.params;
-  return Response.json({ margins: db.prepare("SELECT * FROM margins WHERE note_id=? AND review_state IS NULL ORDER BY num").all(id) });
+  // ownership: margins belong to the note owner only (blocker fix: IDOR on user content)
+  return Response.json({
+    margins: db.prepare(
+      "SELECT m.* FROM margins m JOIN notes n ON n.id=m.note_id WHERE n.id=? AND n.user_id=? AND m.review_state IS NULL ORDER BY m.num"
+    ).all(id, user.id),
+  });
 }
 
 // POST /api/notes/[id]/margins  {action: evaluate|reply|dismiss|pin|rate|convert, ...}
@@ -23,7 +28,7 @@ export async function POST(req: Request, ctx: Ctx) {
   const note = db.prepare("SELECT * FROM notes WHERE id=? AND user_id=?").get(id, user.id) as any;
   if (!note) return jsonError(404, "Note not found.");
   const b = await req.json() as {
-    action: "evaluate" | "reply" | "dismiss" | "pin" | "rate" | "convert";
+    action: "evaluate" | "reply" | "dismiss" | "pin" | "unpin" | "rate" | "convert";
     blocks?: { id: string; text: string }[]; changedIds?: string[]; pace?: string;
     marginId?: string; body?: string; rating?: number;
   };
@@ -62,6 +67,7 @@ export async function POST(req: Request, ctx: Ctx) {
       if (!m) return jsonError(404, "Margin note not found.");
       const transcript = (m.reply ? m.reply + "\n" : "") + "You: " + body;
       db.prepare("UPDATE margins SET reply=? WHERE id=?").run(transcript, m.id);
+      usageIncr(user.id, "margin");
       return Response.json({ ok: true, reply: transcript });
     } else {
       // free-standing question in the margin panel → behaves like Ask, lands as chat
@@ -70,8 +76,14 @@ export async function POST(req: Request, ctx: Ctx) {
         return Response.json({ capped: true, error: "You have used your margin notes for this month. Upgrade for more headroom." }, { status: 429 });
       const mid = uid();
       db.prepare("INSERT INTO ask_messages VALUES(?,?,?,?,?,?,?,?)").run(mid, id, user.id, "user", body, "nudge", 0, Date.now());
+      let strictness: "strict" | "balanced" | "direct" = "balanced";
+      if (user.plan === "pro") {
+        const ns = parseSettings(String(note.settings)).strictness as string;
+        if (ns === "strict") strictness = "strict";
+        if (ns === "direct") strictness = "direct";
+      }
       const answer = await import("@/lib/providers").then((p) =>
-        p.askAI({ kind: "chat", noteText: note.text, history: [], userMessage: body, hintLevel: 1, plan: (user.plan || "free") as Plan, strictness: "balanced" })
+        p.askAI({ kind: "chat", noteText: note.text, history: [], userMessage: body, hintLevel: 1, plan: (user.plan || "free") as Plan, strictness })
       );
       const aid = uid();
       db.prepare("INSERT INTO ask_messages VALUES(?,?,?,?,?,?,?,?)").run(aid, id, user.id, "assistant", answer.body, answer.kind, answer.level, Date.now());
@@ -81,10 +93,11 @@ export async function POST(req: Request, ctx: Ctx) {
   }
 
   const m = b.marginId && (db.prepare("SELECT * FROM margins WHERE id=? AND note_id=? AND user_id=?").get(b.marginId, id, user.id) as any);
-  if (["dismiss", "pin", "rate", "convert"].includes(b.action) && !m) return jsonError(404, "Margin note not found.");
+  if (["dismiss", "pin", "unpin", "rate", "convert"].includes(b.action) && !m) return jsonError(404, "Margin note not found.");
 
   if (b.action === "dismiss") { db.prepare("UPDATE margins SET status='dismissed' WHERE id=?").run(m.id); return Response.json({ ok: true }); }
   if (b.action === "pin") { db.prepare("UPDATE margins SET status='pinned' WHERE id=?").run(m.id); return Response.json({ ok: true }); }
+  if (b.action === "unpin") { db.prepare("UPDATE margins SET status='open' WHERE id=?").run(m.id); return Response.json({ ok: true }); }
   if (b.action === "rate") { db.prepare("UPDATE margins SET rating=? WHERE id=?").run(b.rating === -1 ? -1 : 1, m.id); return Response.json({ ok: true }); }
 
   if (b.action === "convert") {

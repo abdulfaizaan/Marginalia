@@ -144,7 +144,10 @@ export default function Editor({ note, margins0, ask0, visuals, notebooks }: Pro
       });
       if (r.capped) { setCapped(r.error || "Your monthly margin notes are used up."); return; }
       if (r.notes?.length) setMargins((ms) => [...ms, ...r.notes!]);
-    } catch { /* network hiccup — the next quiet pause retries */ }
+    } catch (x: unknown) {
+      // api() throws on 429 with the server's cap message — surface it in the margin rail
+      setCapped(x instanceof Error ? x.message : "Could not reach Marginalia — try the next pause.");
+    }
   }, [note.id, note.private]);
 
   const editor = useEditor(

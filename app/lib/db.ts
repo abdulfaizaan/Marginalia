@@ -168,6 +168,11 @@ export function monthKey(ts = Date.now()): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
+/** node:sqlite rows come back with null prototypes — React server→client props reject them. */
+export function plainRows<T extends object>(rows: readonly T[]): T[] {
+  return rows.map((r) => ({ ...r }));
+}
+
 function createDb(): DatabaseSync {
   const file = process.env.DATABASE_URL || "data/marginalia.db";
   const full = file.includes("/") || file.includes("\\") // turbopackIgnore: the DB file is runtime data, never bundled

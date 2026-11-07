@@ -37,7 +37,7 @@ export default function AskPanel({ noteId, msgs, setMsgs, journal }: {
     if (!body.trim() || busy) return;
     setBusy(true); setErr(null);
     try {
-      const r = await api<{ body: string; kind: string; level?: number }>(" /api/ai/ask".trim(), {
+      const r = await api<{ body: string; kind: string; level?: number }>("/api/ai/ask", {
         method: "POST",
         body: JSON.stringify({ noteId, kind: journal ? "journal" : "chat", message: body, hintLevel }),
       });

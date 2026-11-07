@@ -1,4 +1,4 @@
-import { db, uid } from "@/lib/db";
+import { db, uid, parseSettings } from "@/lib/db";
 import { getSessionUser, jsonError } from "@/lib/auth";
 import { askAI, journalAI } from "@/lib/providers";
 import { TIERS, type Plan } from "@/lib/plans";
@@ -14,11 +14,11 @@ export async function POST(req: Request) {
   if (u.margin >= tier.notesMonth)
     return Response.json({ capped: true, error: "You have used your margin notes for this month. Upgrade for more headroom." }, { status: 429 });
 
-  let noteText = "", noteId = "";
+  let noteText = "", noteId = "", noteSettings = "{}";
   if (b.noteId) {
     const n = db.prepare("SELECT * FROM notes WHERE id=? AND user_id=?").get(b.noteId, user.id) as any;
     if (!n) return jsonError(404, "Note not found.");
-    noteText = n.text as string; noteId = n.id as string;
+    noteText = n.text as string; noteId = n.id as string; noteSettings = String(n.settings ?? "{}");
   }
 
   // Journaling care runs offline (never routed to a vendor) and reports care kind.
@@ -34,12 +34,19 @@ export async function POST(req: Request) {
   void focusOff;
   const hist = (db.prepare("SELECT role,body FROM ask_messages WHERE note_id=? ORDER BY created_at DESC LIMIT 6").all(noteId) as { role: string; body: string }[]).reverse().map((r) => ({ role: r.role as "user" | "assistant", body: r.body }));
   const level = Math.max(1, Math.min(3, b.hintLevel || 1));
+  // strictness lives on the note and is a Pro-only control; everyone else rides balanced
+  let strictness: "strict" | "balanced" | "direct" = "balanced";
+  if (user.plan === "pro") {
+    const noteStrict = parseSettings(noteSettings).strictness as string;
+    if (noteStrict === "strict") strictness = "strict";
+    if (noteStrict === "direct") strictness = "direct";
+  }
   const r = await askAI({
     kind: b.kind, noteText, selection: b.selection, history: hist,
     userMessage: b.message || (b.selection ? `Probe this: ${b.selection}` : "Help me with this note."),
     hintLevel: level,
     plan: (user.plan || "free") as Plan,
-    strictness: "balanced",
+    strictness,
   });
   const userLine = b.message || (b.selection ? `Probe: ${b.selection}` : "");
   if (userLine) db.prepare("INSERT INTO ask_messages VALUES(?,?,?,?,?,?,?,?)").run(uid(), noteId, user.id, "user", userLine.slice(0, 2000), "nudge", 0, Date.now());

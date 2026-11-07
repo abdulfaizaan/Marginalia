@@ -19,6 +19,9 @@ export const idAttr = Extension.create({
             parseHTML: (el: HTMLElement) => el.getAttribute("data-id") || el.getAttribute("id"),
             renderHTML: (attrs: { id?: string | null }) => (attrs.id ? { "data-id": attrs.id } : {}),
           },
+          // AI-inserted / pinned paragraphs (set server-side) must survive Tiptap round-trips
+          ai: { default: null, parseHTML: () => null, renderHTML: (attrs: { ai?: string | null }) => (attrs.ai ? { "data-ai": attrs.ai } : {}) },
+          pinnedVisual: { default: null, parseHTML: () => null, renderHTML: () => ({}), keepOnSplit: false },
         },
       },
     ];

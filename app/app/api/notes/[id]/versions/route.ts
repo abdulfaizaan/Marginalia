@@ -12,6 +12,9 @@ export async function GET(req: Request, ctx: Ctx) {
   const { id } = await ctx.params;
   const tier = TIERS[(user.plan || "free") as Plan] || TIERS.free;
   const cutoff = tier.versionsDays ? Date.now() - tier.versionsDays * 86_400_000 : 0;
+  // ownership: this note must belong to the caller
+  const owned = db.prepare("SELECT id FROM notes WHERE id=? AND user_id=?").get(id, user.id);
+  if (!owned) return jsonError(404, "Note not found.");
   const rows = db.prepare("SELECT id,words,created_at FROM versions WHERE note_id=? AND created_at>? ORDER BY created_at DESC LIMIT 60").all(id, cutoff);
   // housekeeping: prune beyond window
   if (cutoff) db.prepare("DELETE FROM versions WHERE note_id=? AND created_at<=?").run(id, cutoff);

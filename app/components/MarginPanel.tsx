@@ -30,6 +30,7 @@ interface Props {
 export default function MarginPanel({ noteId, margins, setMargins, replyTo, setReplyTo, capped, double: cols, addAsk, goAsk }: Props) {
   const router = useRouter();
   const [reply, setReply] = useState("");
+  const [sendErr, setSendErr] = useState<string | null>(null);
   const [busy, startBusy] = useTransition();
 
   function act(marginId: string, action: "rate" | "rate_down" | "dismiss" | "pin" | "unpin") {
@@ -44,7 +45,6 @@ export default function MarginPanel({ noteId, margins, setMargins, replyTo, setR
           : m
       )
     );
-    if (action === "unpin") return; // pin toggles back to open instantly — one POST is enough
     startBusy(async () => {
       await api(`/api/notes/${noteId}/margins`, {
         method: "POST",
@@ -67,19 +67,27 @@ export default function MarginPanel({ noteId, margins, setMargins, replyTo, setR
     if (to) {
       setReplyTo(null);
       startBusy(async () => {
-        const r = await api<{ reply: string }>(`/api/notes/${noteId}/margins`, {
-          method: "POST", body: JSON.stringify({ action: "reply", marginId: to, body }),
-        });
-        setMargins((ms) => ms.map((m) => (m.id === to ? { ...m, reply: r.reply } : m)));
+        try {
+          const r = await api<{ reply: string }>(`/api/notes/${noteId}/margins`, {
+            method: "POST", body: JSON.stringify({ action: "reply", marginId: to, body }),
+          });
+          setMargins((ms) => ms.map((m) => (m.id === to ? { ...m, reply: r.reply } : m)));
+        } catch (x: unknown) {
+          setSendErr(x instanceof Error ? x.message : "Could not send."); setReply(body); // restore the user's text
+        }
       });
     } else {
       startBusy(async () => {
-        const r = await api<{ asked: { user: string; assistant: string; kind: string; level: number } }>(`/api/notes/${noteId}/margins`, {
-          method: "POST", body: JSON.stringify({ action: "reply", body }),
-        });
-        if (r.asked) {
-          addAsk(r.asked.user, r.asked.assistant, r.asked.kind, r.asked.level);
-          goAsk();
+        try {
+          const r = await api<{ asked: { user: string; assistant: string; kind: string; level: number } }>(`/api/notes/${noteId}/margins`, {
+            method: "POST", body: JSON.stringify({ action: "reply", body }),
+          });
+          if (r.asked) {
+            addAsk(r.asked.user, r.asked.assistant, r.asked.kind, r.asked.level);
+            goAsk();
+          }
+        } catch (x: unknown) {
+          setSendErr(x instanceof Error ? x.message : "Could not send."); setReply(body);
         }
       });
     }
@@ -110,6 +118,7 @@ export default function MarginPanel({ noteId, margins, setMargins, replyTo, setR
       </div>
 
       <div className="px-5 pb-5">
+        {sendErr && <div className="mb-1.5 text-[12px] font-semibold text-amber-700">{sendErr} <Link href="/pricing" className="underline">See plans</Link></div>}
         {replyTo && (
           <div className="mb-1.5 text-[12px] text-accent">
             Replying to note {visible.find((m) => m.id === replyTo)?.num ?? ""} ·{" "}

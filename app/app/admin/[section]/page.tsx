@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
+import { connection } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import AdminSection from "@/components/AdminSection";
 
@@ -14,6 +15,7 @@ export default async function AdminSectionPage({ params }: { params: Promise<{ s
 }
 
 async function Gate({ section: paramsSection }: { section: Promise<{ section: string }> }) {
+  await connection(); // per-request admin session; never prerender
   const { section } = await paramsSection;
   if (!SECTIONS.includes(section)) notFound();
   const user = await getSessionUser();

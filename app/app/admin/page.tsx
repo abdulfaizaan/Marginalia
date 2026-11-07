@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import AdminOverview from "@/components/AdminOverview";
 
@@ -12,6 +13,7 @@ export default async function AdminPage() {
 }
 
 async function Gate() {
+  await connection(); // admin sign-in expiry is per-request; never prerender
   const user = await getSessionUser();
   if (!user || user.role !== "admin") redirect("/admin/sign-in");
   return <AdminOverview />;

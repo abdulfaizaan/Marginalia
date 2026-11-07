@@ -1,7 +1,8 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { getSessionUser } from "@/lib/auth";
-import { db, monthKey, parseSettings } from "@/lib/db";
+import { db, monthKey, parseSettings, plainRows } from "@/lib/db";
 import { TIERS, type Plan } from "@/lib/plans";
 import { usageGet } from "@/lib/admin";
 import AccountClient from "@/components/AccountClient";
@@ -15,11 +16,12 @@ export default async function AccountPage() {
 }
 
 async function Account() {
+  await connection(); // usage month + last-active are per-request; never prerender
   const user = await getSessionUser();
   if (!user) redirect("/sign-in");
   const plan = (user.plan || "free") as Plan;
   const tier = TIERS[plan] || TIERS.free;
-  const used = usageGet(user.id);
+  const used = plainRows([usageGet(user.id)])[0];
   const row = db.prepare("SELECT email,name,promo,status FROM users WHERE id=?").get(user.id) as
     | { email: string; name: string; promo: string | null; status: string }
     | undefined;

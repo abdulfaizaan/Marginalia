@@ -40,7 +40,7 @@ export default function SideRail({ noteId, notebooks, visuals }: { noteId: strin
 
       {pins.length > 0 && (
         <div>
-          <div className="mb-1.5 text-[11px] font-bold tracking-[0.14em] text-muted">PINNED VISUALS</div>
+          <div className="mb-1.5 text-[11px] font-bold tracking-[0.14em] text-muted">VISUALS</div>
           {pins.map((p) => (
             <Link key={p.id} href={`/notes/${noteId}/visual`}>
               <div className="rounded-lg border border-line bg-card px-2.5 py-2 text-[12.5px] font-semibold text-ink-soft hover:border-ink-soft/40">{p.title}</div>

@@ -13,7 +13,7 @@ export const LAUNCH_PRICE_CENTS = 499; // 50% of Plus, 3 months
 
 /** Promo-cap decision as a pure function so the check script can pin it. */
 export function enforcePromo(code: string, used: number, total: number, alreadyRedeemed: boolean, planWanted: Plan, promoMonthsSoFar: number): { ok: boolean; reason?: string; discountMonths?: number } {
-  if (planWanted !== "plus" && planWanted !== "pro") return { ok: false, reason: "Promo applies to paid plans" };
+  if (planWanted !== "plus") return { ok: false, reason: "LAUNCH50 applies to the Plus plan" };
   if (alreadyRedeemed) return { ok: false, reason: "One redemption per account" };
   if (used >= total) return { ok: false, reason: "This code has reached its 100-user limit" };
   if (promoMonthsSoFar > 0) return { ok: false, reason: "Promo already active" };

@@ -73,7 +73,12 @@ export async function askAI(inp: AskInput): Promise<(AskResp & { provider: strin
     const raw = JSON.parse(await chat(route, sys, user));
     const body = capWords(String(raw.body || ""));
     if (countWords(body) < 2) return { ...askRespond(inp), provider: route.name + "+offline" };
-    return { body, kind: raw.kind === "answer" ? "answer" : "hint", level: Math.min(4, Math.max(1, Number(raw.level) || 1)), provider: route.name };
+    // the offline gate is authoritative: a model may never unlock a rung the plan forbids
+    const kind = raw.kind === "answer" ? "answer" : "hint";
+    if (kind === "hint") return { body, kind, level: Math.min(3, Math.max(1, Number(raw.level) || 1)), provider: route.name };
+    const gate = askRespond({ ...inp, userMessage: "Just give me the full answer", hintLevel: Math.max(inp.hintLevel, 3) });
+    if (gate.kind !== "answer") return { ...gate, provider: route.name + "+gate" };
+    return { body, kind: "answer", level: 4, provider: route.name };
   } catch {
     return { ...askRespond(inp), provider: route.name + "+offline" };
   }

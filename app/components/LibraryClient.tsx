@@ -128,7 +128,9 @@ export default function LibraryClient({ user, notebooks, notes, used }: Props) {
                   <div className="text-[11.5px] font-bold tracking-[0.12em] text-muted">CONTINUE WRITING</div>
                   <div className="mt-1.5 font-serif text-[30px] font-medium text-ink">{hero.title}</div>
                   <div className="mt-1 text-[13.5px] text-muted">{hero.notebook} · edited {timeAgo(hero.updated_at)}</div>
-                  <div className="mt-3 truncate font-serif text-[15.5px] text-ink-soft">{hero.snippet || ""}</div>
+                  <div className="mt-3 truncate font-serif text-[15.5px] text-ink-soft">
+                    {hero.private ? "Private entry — preview hidden." : hero.snippet || ""}
+                  </div>
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-1.5">
                   {!!hero.error && <Chip kind="error">1 error flag</Chip>}

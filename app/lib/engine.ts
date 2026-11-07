@@ -121,16 +121,20 @@ export interface AskResp { body: string; kind: "hint" | "answer"; level: number 
 export function askRespond(inp: AskInput): AskResp {
   const wantsFull = /\b(full|actual) answer\b|\bjust (tell|give) me\b|\bsolve it for me\b|\bthe solution\b/i.test(inp.userMessage);
   const allowedFull =
-    (inp.strictness === "direct" && inp.plan === "pro") ||
+    (inp.plan === "pro" && inp.strictness === "direct") ||
     (inp.plan === "pro" && inp.hintLevel >= 3) ||
-    (inp.plan === "plus" && inp.hintLevel >= 3) ||
-    inp.plan === "pro" && inp.strictness === "direct";
+    (inp.plan === "plus" && inp.hintLevel >= 3);
   if (inp.strictness === "strict")
     return { body: capWords("Staying strict: only questions here. " + ladderNudge(inp.hintLevel + 1)), kind: "hint", level: Math.min(inp.hintLevel + 1, 3) };
   if (wantsFull && allowedFull)
     return { body: capWords(`Here is the full answer to keep or correct: consider ${shortTopic(inp)}. Work it once more; the answer only sticks when the steps feel owed.`), kind: "answer", level: 4 };
-  if (wantsFull)
-    return { body: "I keep the ladder on this plan — three rungs and then the whole thing. You are on rung " + Math.min(inp.hintLevel, 3) + " of 3; take Another hint and it is yours.", kind: "hint", level: 3 };
+  if (wantsFull) {
+    const rung = Math.min(inp.hintLevel, 3);
+    const copy = inp.plan === "free"
+      ? "Hint mode stays on your plan — I keep pointing, you keep solving. " + ladderNudge(rung || 1)
+      : "I keep the ladder on — take Another hint and I will open the last rung when you have walked these. Then it is yours.";
+    return { body: capWords(copy), kind: "hint", level: rung || 1 };
+  }
   return { body: capWords(ladderNudge(Math.min(inp.hintLevel + 1, 3))), kind: "hint", level: Math.min(inp.hintLevel + 1, 3) };
 }
 

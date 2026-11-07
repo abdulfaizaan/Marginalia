@@ -22,7 +22,8 @@ export default function AuthForm() {
     setBusy(true); setErr(null);
     try {
       await api("/api/auth", { method: "POST", body: JSON.stringify({ action: mode, email, password: pw, name, ageOk: age }) });
-      router.push(mode === "signup" ? "/notes" : (params.get("next") || "/notes"));
+      const next = params.get("next") || "/notes";
+      router.push(/^\/[a-z]/i.test(next) ? next : "/notes"); // no open redirect via ?next=//evil.com
     } catch (x: unknown) {
       setErr(x instanceof Error ? x.message : "Something went wrong.");
     } finally { setBusy(false); }

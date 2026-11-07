@@ -134,7 +134,7 @@ export default function PricingClient({ signedIn, currentPlan }: { signedIn: boo
                 <span>${(priceCents / 100).toFixed(2)}</span>
               </div>
               <p className="mt-2 text-[12.5px] text-muted">
-                {summary ? summary.renews : `Renews monthly at $${(TIERS[sel].priceCents / 100).toFixed(2)}${sel === "pro" ? ".99" : ""}.`}
+                {summary ? summary.renews : `Renews monthly at $${(TIERS[sel].priceCents / 100).toFixed(2)}.`}
               </p>
             </div>
           </Card>

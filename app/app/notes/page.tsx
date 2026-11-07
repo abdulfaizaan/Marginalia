@@ -1,7 +1,8 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { getSessionUser } from "@/lib/auth";
-import { db, parseSettings, monthKey } from "@/lib/db";
+import { db, parseSettings, monthKey, plainRows } from "@/lib/db";
 import LibraryClient, { type LibNote } from "@/components/LibraryClient";
 import type { Plan } from "@/lib/plans";
 
@@ -14,9 +15,10 @@ export default async function LibraryPage() {
 }
 
 async function Library() {
+  await connection(); // usage month + last-active are per-request; never prerender
   const user = await getSessionUser();
   if (!user) redirect("/sign-in");
-  const notebooks = db.prepare("SELECT * FROM notebooks WHERE user_id=? ORDER BY position").all(user.id) as { id: string; name: string; is_journal: number }[];
+  const notebooks = plainRows(db.prepare("SELECT * FROM notebooks WHERE user_id=? ORDER BY position").all(user.id) as { id: string; name: string; is_journal: number }[]);
   const rows = db.prepare(
     `SELECT n.id,n.title,n.updated_at,n.words,n.private,n.mode,n.notebook_id,nb.name AS notebook, substr(n.text,1,160) AS snippet
      FROM notes n JOIN notebooks nb ON nb.id=n.notebook_id WHERE n.user_id=? ORDER BY n.updated_at DESC`

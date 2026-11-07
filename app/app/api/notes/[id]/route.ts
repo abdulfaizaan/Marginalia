@@ -1,4 +1,4 @@
-import { db, parseSettings } from "@/lib/db";
+import { db, uid, parseSettings } from "@/lib/db";
 import { getSessionUser, jsonError } from "@/lib/auth";
 import { userWordsInDoc, type Doc } from "@/lib/exporters";
 
@@ -42,6 +42,15 @@ export async function PATCH(req: Request, ctx: Ctx) {
      words=COALESCE(?,words), ai_words=COALESCE(?,ai_words), mode=COALESCE(?,mode),
      settings=COALESCE(?,settings), updated_at=? WHERE id=?`
   ).run(title, docStr ?? null, text ?? null, words ?? null, aiWords ?? null, b.mode ?? null, settingsStr ?? null, Date.now(), id);
+
+  // version snapshot: at most one per 10 minutes of writing (time-based, cheap)
+  if (docStr) {
+    const last = db.prepare("SELECT created_at FROM versions WHERE note_id=? ORDER BY created_at DESC LIMIT 1").get(id) as { created_at: number } | undefined;
+    if (!last || Date.now() - last.created_at > 10 * 60_000) {
+      db.prepare("INSERT INTO versions(id,note_id,content_json,words,created_at) VALUES(?,?,?,?,?)")
+        .run(uid(), id, docStr, words ?? note.words, Date.now());
+    }
+  }
   return Response.json({ ok: true, savedAt: Date.now() });
 }
 

@@ -1,5 +1,5 @@
 import { db, uid, DAY, hashPassword, checkPassword } from "@/lib/db";
-import { createSession, setSessionCookie } from "@/lib/auth";
+import { createSession, setSessionCookie, clearSessionCookie } from "@/lib/auth";
 
 export async function POST(req: Request) {
   const b = await req.json() as { action: "signup" | "signin" | "google" | "signout"; email?: string; password?: string; name?: string; ageOk?: boolean };
@@ -7,7 +7,7 @@ export async function POST(req: Request) {
     const jar = await import("next/headers").then((m) => m.cookies());
     const token = jar.get("mg_session")?.value;
     if (token) db.prepare("DELETE FROM sessions WHERE token=?").run(token);
-    return setSessionCookie(Response.json({ ok: true }), "");
+    return clearSessionCookie(Response.json({ ok: true }));
   }
   if (b.action === "google") {
     // dummy key / dummy OAuth: logs into the demo Google account
