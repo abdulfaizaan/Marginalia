@@ -47,7 +47,7 @@ The spec implies but no single task's test exercises — each row's test is pinn
 - Consumes: `node:crypto` (`createCipheriv`, `createDecipheriv`, `randomBytes`, `timingSafeEqual`).
 - Produces: `lib/crypto.ts` → `encryptSecret(plain: string): Buffer` (returns `NoncePrefix(12) + ciphertext+tag`), `decryptSecret(blob: unknown): string | null` (null on any failure), `getAppSecret(): string` (reads/generates `APP_SECRET`). db exports `userAiConfig(userId): AiKeyConfig | null` and `setUserAiKey(userId, cfg)` / `clearUserAiKey(userId)` types from Task 3 — schema prep only here.
 
-- [ ] **Step 1: Write the failing test** (append to `scripts/check.ts` before the final counters)
+- [x] **Step 1: Write the failing test** (append to `scripts/check.ts` before the final counters)
 
 ```ts
 // ---------- crypto: secrets at rest ----------
@@ -60,12 +60,12 @@ ok(decryptSecret(swapped) === null, "decryptSecret fails closed on tamper");
 ok(decryptSecret("garbage") === null, "decryptSecret fails closed on garbage");
 ```
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 Run: `npm run check`
 Expected: FAIL `encryptSecret produces non-trivial blob` (module missing → import error FAIL).
 
-- [ ] **Step 3: Implement `lib/crypto.ts`** (AES-256-GCM: 12-byte nonce prefix + ciphertext + 16-byte tag; key derived from `APP_SECRET`)
+- [x] **Step 3: Implement `lib/crypto.ts`** (AES-256-GCM: 12-byte nonce prefix + ciphertext + 16-byte tag; key derived from `APP_SECRET`)
 
 ```ts
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
@@ -122,7 +122,7 @@ export function decryptSecret(blob: unknown): string | null {
 }
 ```
 
-- [ ] **Step 4: Schema migration in `lib/db.ts`** — extend the init between `db.exec(SCHEMA)` and seeding:
+- [x] **Step 4: Schema migration in `lib/db.ts`** — extend the init between `db.exec(SCHEMA)` and seeding:
 
 ```ts
   // SP1: per-user AI key config (BYOK). Guarded ADD COLUMN for existing DBs.
@@ -135,12 +135,12 @@ export function decryptSecret(blob: unknown): string | null {
 
 Also extend `SCHEMA`'s `users` CREATE TABLE with the same four columns (for fresh DBs) and add to `UserRow`: `ai_vendor: string | null; ai_key_enc: Buffer | null; ai_model: string | null; ai_base: string | null;`
 
-- [ ] **Step 5: Run to verify it passes**
+- [x] **Step 5: Run to verify it passes**
 
 Run: `npm run check`
 Expected: PASS all previous + 4 new crypto checks.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add app/lib/crypto.ts app/lib/db.ts app/scripts/check.ts

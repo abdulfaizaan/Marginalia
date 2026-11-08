@@ -88,4 +88,13 @@ const shown = toMarkdown("T", doc, { hideAi: false, margins: [], footnotes: fals
 ok(shown.includes("AI (question)") ? shown.includes("What if the opposite held?") : false, "md keeps AI text when not hidden");
 ok(toPrintHtml("T", doc, { hideAi: false, margins: [], footnotes: false }).includes("window.print()"), "print HTML auto-opens print dialog");
 
+// ---------- crypto: secrets at rest ----------
+const { encryptSecret, decryptSecret } = await import("../lib/crypto.ts");
+const secretBlob = encryptSecret("sk-test-1234567890");
+ok(secretBlob.length > 28, "encryptSecret produces non-trivial blob");
+ok(decryptSecret(secretBlob) === "sk-test-1234567890", "decryptSecret round-trips");
+const swapped = Buffer.from(secretBlob); swapped[0] ^= 0xff;
+ok(decryptSecret(swapped) === null, "decryptSecret fails closed on tamper");
+ok(decryptSecret("garbage") === null, "decryptSecret fails closed on garbage");
+
 console.log(`\n${n} checks passed.`);

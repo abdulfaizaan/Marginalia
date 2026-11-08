@@ -10,7 +10,8 @@ CREATE TABLE IF NOT EXISTS users(
   name TEXT NOT NULL DEFAULT '', plan TEXT NOT NULL DEFAULT 'free', role TEXT NOT NULL DEFAULT 'user',
   promo TEXT, promo_months INT NOT NULL DEFAULT 0, status TEXT NOT NULL DEFAULT 'active',
   age_ok INT NOT NULL DEFAULT 1, settings TEXT NOT NULL DEFAULT '{}',
-  joined_at INT NOT NULL, last_active INT NOT NULL
+  joined_at INT NOT NULL, last_active INT NOT NULL,
+  ai_vendor TEXT, ai_key_enc BLOB, ai_model TEXT, ai_base TEXT
 );
 CREATE TABLE IF NOT EXISTS sessions(token TEXT PRIMARY KEY, user_id TEXT NOT NULL, created_at INT NOT NULL, expires_at INT NOT NULL);
 CREATE TABLE IF NOT EXISTS notebooks(id TEXT PRIMARY KEY, user_id TEXT NOT NULL, name TEXT NOT NULL, is_journal INT NOT NULL DEFAULT 0, position INT NOT NULL DEFAULT 0);
@@ -181,6 +182,14 @@ function createDb(): DatabaseSync {
   mkdirSync(dirname(full), { recursive: true });
   const db = new DatabaseSync(full);
   db.exec(SCHEMA);
+  // SP1: per-user AI key config (BYOK). Guarded ADD COLUMN for existing DBs.
+  const cols = (db.prepare("PRAGMA table_info(users)").all() as { name: string }[]).map((c) => c.name);
+  // try/catch tolerates a parallel init racing the same file (dev hot reload / build workers): "duplicate column name".
+  const alter = (col: string, ddl: string) => { if (!cols.includes(col)) { try { db.exec(ddl); } catch { /* already added elsewhere */ } } };
+  alter("ai_vendor", `ALTER TABLE users ADD COLUMN ai_vendor TEXT`);
+  alter("ai_key_enc", `ALTER TABLE users ADD COLUMN ai_key_enc BLOB`);
+  alter("ai_model", `ALTER TABLE users ADD COLUMN ai_model TEXT`);
+  alter("ai_base", `ALTER TABLE users ADD COLUMN ai_base TEXT`);
   const n = (db.prepare("SELECT COUNT(*) c FROM users").get() as { c: number }).c;
   if (n === 0) seedUsers(db);
   return db;
@@ -193,7 +202,7 @@ export const db: DatabaseSync = (g.__marginaliaDb ??= createDb());
 // ---------- row types (parsed where convenient) ----------
 export interface NoteRow { id: string; user_id: string; notebook_id: string; title: string; content_json: string; text: string; words: number; ai_words: number; mode: "think" | "ask"; settings: string; private: number; pinned_visual: string | null; created_at: number; updated_at: number; }
 export interface MarginRow { id: string; note_id: string; user_id: string; anchor: string; num: number; type: string; body: string; reply: string | null; status: string; rating: number | null; level: number; want_visual: number; review_state: string | null; created_at: number; orig_created_at: number | null; }
-export interface UserRow { id: string; email: string; password: string; name: string; plan: string; role: string; promo: string | null; promo_months: number; status: string; age_ok: number; settings: string; joined_at: number; last_active: number; }
+export interface UserRow { id: string; email: string; password: string; name: string; plan: string; role: string; promo: string | null; promo_months: number; status: string; age_ok: number; settings: string; joined_at: number; last_active: number; ai_vendor: string | null; ai_key_enc: Buffer | null; ai_model: string | null; ai_base: string | null; }
 
 export function parseSettings(s: string) {
   return { pace: "slow", strictness: "balanced", margins: "single", focus: false, font: "serif", size: 2, theme: "light", ...JSON.parse(s || "{}") };
