@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { api, timeAgo } from "@/lib/client";
 import { Chip, Logo, btnGhost, btnMini, btnPrimary, inputCls, Card } from "@/components/ui";
 import LinkHint from "@/components/LinkHint";
-import { TIERS, type Plan } from "@/lib/plans";
+import { CAPS, type Plan } from "@/lib/plans";
 
 export interface LibNote {
   id: string; title: string; updated_at: number; words: number; private: number; mode: string; snippet: string | null;
@@ -27,7 +27,8 @@ export default function LibraryClient({ user, notebooks, notes, used }: Props) {
   const [sort, setSort] = useState<"recent" | "az">("recent");
   const [busy, startBusy] = useTransition();
 
-  const tier = TIERS[user.plan] || TIERS.free;
+  // SP1: single tier — the card's plan copy/Upgrade button are removed in the payments sweep (Task 5)
+  const tier = { label: "Free", notesMonth: CAPS.notesMonth };
   const filtered = useMemo(() => {
     let list = notes;
     if (nbFilter) list = list.filter((n) => n.notebook_id === nbFilter);

@@ -1,7 +1,6 @@
 // Runnable check: node scripts/check.ts (per ponytail AGENTS.md — one assert script, no frameworks)
 // Exit 0 = all pass; first failure stops with FAIL + message.
 import { capWords, validDraft, askRespond, journalRespond, WORD_CAP, countWords } from "../lib/engine.ts";
-import { enforcePromo } from "../lib/plans.ts";
 import { parsePair, buildVisual, type VisualSpec } from "../lib/visualize.ts";
 import { toMarkdown, toPrintHtml, type Doc } from "../lib/exporters.ts";
 import type { MarginRow } from "../lib/db.ts";
@@ -31,29 +30,21 @@ ok(!validDraft({ anchor: "", type: "question", body: "Which case breaks first?" 
 ok(!validDraft({ anchor: "p1", type: "question", body: "" }), "validDraft rejects empty body");
 ok(!validDraft({ anchor: "p1", type: "question", body: long }), "validDraft rejects over-cap body");
 
-// ---------- engine: ask ladder ----------
-const base = { kind: "chat" as const, noteText: "note", selection: undefined, history: [], plan: "free" as const, strictness: "balanced" as const, userMessage: "Stuck here." };
-ok(askRespond({ ...base, hintLevel: 1 }).kind === "hint" && askRespond({ ...base, hintLevel: 1 }).level === 2, "ask ladder: hint nudges next rung");
-ok(askRespond({ ...base, hintLevel: 3 }).level === 3, "ask ladder: rung caps at 3 for hints");
-const fullFree = askRespond({ ...base, userMessage: "Just give me the full answer", hintLevel: 1 });
-ok(fullFree.kind === "hint", "ask ladder: Free cannot buy level 4");
-const fullPlus = askRespond({ ...base, plan: "plus", userMessage: "Just give me the full answer", hintLevel: 3 });
-ok(fullPlus.kind === "answer" && fullPlus.level === 4, "ask ladder: Plus after rung 3 gets the answer");
-const strict = askRespond({ ...base, plan: "plus", strictness: "strict", userMessage: "Just give me the full answer", hintLevel: 3 });
-ok(strict.kind === "hint", "strict mode: never the answer");
-const direct = askRespond({ ...base, plan: "pro", strictness: "direct", userMessage: "Give me the actual answer", hintLevel: 1 });
-ok(direct.kind === "answer", "Direct (Pro): full answer on request");
+// ---------- engine: ask ladder (plan-free rules) ----------
+const base = { kind: "chat" as const, noteText: "note", selection: undefined, history: [], strictness: "balanced" as const, userMessage: "Stuck here." };
+ok(askRespond({ ...base, hintLevel: 1 }).kind === "hint", "ladder: hint nudges along");
+ok(askRespond({ ...base, hintLevel: 3 }).kind === "hint", "ladder: hint even at rung 3 when not asking for the answer");
+const flat3 = askRespond({ ...base, userMessage: "Just give me the full answer", hintLevel: 3 });
+ok(flat3.kind === "answer" && flat3.level === 4, "ladder: walked rungs + explicit ask → answer");
+const directReq = askRespond({ ...base, strictness: "direct", userMessage: "Give me the actual answer", hintLevel: 1 });
+ok(directReq.kind === "answer", "Direct: full answer on request");
+const strict = askRespond({ ...base, strictness: "strict", userMessage: "Just give me the full answer", hintLevel: 3 });
+ok(strict.kind === "hint", "strict: never the answer");
 
 // ---------- engine: journal care ----------
 ok(journalRespond("I can't go on anymore with this.").kind === "care", "journal crisis routes to care");
 ok(journalRespond("just a quiet day, thinking it over").kind === "reflect", "journal non-crisis reflects");
 ok(journalRespond("no reason to live").body.includes("988") || journalRespond("no reason to live").body.includes("emergency"), "care message carries resources");
-
-// ---------- plans: promo rules ----------
-ok(enforcePromo("LAUNCH50", 100, 100, false, "plus", 0).ok === false, "promo respects 100-user cap");
-ok(enforcePromo("LAUNCH50", 62, 100, true, "plus", 0).ok === false, "promo one per account");
-ok(enforcePromo("LAUNCH50", 62, 100, false, "free", 0).ok === false, "promo paid-only");
-ok(enforcePromo("LAUNCH50", 62, 100, false, "plus", 0).ok === true && enforcePromo("LAUNCH50", 62, 100, false, "plus", 0).discountMonths === 3, "promo grants 3 discounted months");
 
 // ---------- visualize: pair parsing + LCS grid ----------
 const pair = parsePair("starting with ABCB against BDCB.");

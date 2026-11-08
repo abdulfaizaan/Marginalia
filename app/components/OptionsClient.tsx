@@ -7,7 +7,6 @@ import { api, setTheme, timeAgo } from "@/lib/client";
 import { Card, Checkbox, Chip, RadioRow, btnGhost, btnPrimary, inputCls } from "@/components/ui";
 import LinkHint from "@/components/LinkHint";
 import type { Plan } from "@/lib/plans";
-
 interface Props {
   noteId: string;
   plan: Plan;

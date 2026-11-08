@@ -1,8 +1,7 @@
 import { thinkEvaluate, askRespond, journalRespond, validDraft, capWords, countWords, type MarginDraft, type ThinkInput, type AskInput, type AskResp, type JournalResp } from "./engine";
-import type { Plan } from "./plans";
 
-// Model routing (user decision + PRD §11): Plus → OpenAI; Free/Pro → Grok (XAI) → Gemini fallback.
-// A key that still contains "dummy"/"placeholder" is treated as absent: the offline engine runs.
+// Model routing (SP1 env fallback — replaced by per-user BYOK in Task 3):
+// OPENAI_API_KEY → OpenAI; else XAI → Gemini fallback; missing/dummy keys → offline engine.
 
 const OPENAI_BASE = process.env.OPENAI_BASE_URL || "https://api.openai.com/v1";
 const XAI_BASE = process.env.XAI_BASE_URL || "https://api.x.ai/v1";
@@ -10,8 +9,8 @@ const GEMINI_BASE = process.env.GEMINI_BASE_URL || "https://generativelanguage.g
 
 const real = (k: string | undefined) => !!k && !/dummy|placeholder|your[-_]?key/i.test(k);
 
-function routeFor(plan: Plan): { name: "openai" | "xai" | "gemini"; base: string; key: string; model: string } | null {
-  if (plan === "plus" && real(process.env.OPENAI_API_KEY))
+function routeFor(): { name: "openai" | "xai" | "gemini"; base: string; key: string; model: string } | null {
+  if (real(process.env.OPENAI_API_KEY))
     return { name: "openai", base: OPENAI_BASE, key: process.env.OPENAI_API_KEY!, model: process.env.OPENAI_MODEL || "gpt-4o-mini" };
   if (real(process.env.XAI_API_KEY))
     return { name: "xai", base: XAI_BASE, key: process.env.XAI_API_KEY!, model: process.env.XAI_MODEL || "grok-3-mini" };
@@ -26,7 +25,7 @@ export interface MarginsResult { notes: MarginDraft[]; provider: string }
 // ---------- Think with You ----------
 export async function marginNotes(req: MarginRequest): Promise<MarginsResult> {
   const offline = () => thinkEvaluate({ ...req }).map((d) => ({ ...d, body: capWords(d.body) }));
-  const route = routeFor(req.plan);
+  const route = routeFor();
   if (!route) return { notes: offline().filter(validDraft).slice(0, 3), provider: "offline" };
   try {
     const sys = [
@@ -59,7 +58,7 @@ export async function marginNotes(req: MarginRequest): Promise<MarginsResult> {
 
 // ---------- Ask mode ----------
 export async function askAI(inp: AskInput): Promise<(AskResp & { provider: string })> {
-  const route = routeFor(inp.plan);
+  const route = routeFor();
   if (!route) return { ...askRespond(inp), provider: "offline" };
   try {
     const sys = [
@@ -69,7 +68,7 @@ export async function askAI(inp: AskInput): Promise<(AskResp & { provider: strin
       "Never write content for their note. Respond as JSON:",
       '{"body":"<=60 words","kind":"hint|answer","level":1..4}',
     ].join(" ");
-    const user = `Note: ${inp.noteText.slice(0, 2000)}\nSelection: ${inp.selection || "none"}\nLadder level so far: ${inp.hintLevel}  Plan: ${inp.plan}\nUser: ${inp.userMessage}`;
+    const user = `Note: ${inp.noteText.slice(0, 2000)}\nSelection: ${inp.selection || "none"}\nLadder level so far: ${inp.hintLevel}\nUser: ${inp.userMessage}`;
     const raw = JSON.parse(await chat(route, sys, user));
     const body = capWords(String(raw.body || ""));
     if (countWords(body) < 2) return { ...askRespond(inp), provider: route.name + "+offline" };

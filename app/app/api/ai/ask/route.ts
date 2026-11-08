@@ -1,7 +1,7 @@
 import { db, uid, parseSettings } from "@/lib/db";
 import { getSessionUser, jsonError } from "@/lib/auth";
 import { askAI, journalAI } from "@/lib/providers";
-import { TIERS, type Plan } from "@/lib/plans";
+import { CAPS } from "@/lib/plans";
 import { usageGet, usageIncr } from "@/lib/admin";
 
 // POST /api/ai/ask  {noteId, kind:'chat'|'probe'|'journal', message, selection?, hintLevel}
@@ -9,10 +9,10 @@ export async function POST(req: Request) {
   const user = await getSessionUser();
   if (!user) return jsonError(401, "Sign in first.");
   const b = await req.json() as { noteId?: string; kind: "chat" | "probe" | "journal"; message?: string; selection?: string; hintLevel?: number };
-  const tier = TIERS[(user.plan || "free") as Plan] || TIERS.free;
+  const tier = CAPS; // SP1: single fair-use tier
   const u = usageGet(user.id);
   if (u.margin >= tier.notesMonth)
-    return Response.json({ capped: true, error: "You have used your margin notes for this month. Upgrade for more headroom." }, { status: 429 });
+    return Response.json({ capped: true, error: "You have used your free monthly margin limit. Add your own AI key in Settings — limits reset next month." }, { status: 429 });
 
   let noteText = "", noteId = "", noteSettings = "{}";
   if (b.noteId) {
@@ -34,18 +34,15 @@ export async function POST(req: Request) {
   void focusOff;
   const hist = (db.prepare("SELECT role,body FROM ask_messages WHERE note_id=? ORDER BY created_at DESC LIMIT 6").all(noteId) as { role: string; body: string }[]).reverse().map((r) => ({ role: r.role as "user" | "assistant", body: r.body }));
   const level = Math.max(1, Math.min(3, b.hintLevel || 1));
-  // strictness lives on the note and is a Pro-only control; everyone else rides balanced
+  // strictness lives on the note and belongs to everyone now (SP1)
   let strictness: "strict" | "balanced" | "direct" = "balanced";
-  if (user.plan === "pro") {
-    const noteStrict = parseSettings(noteSettings).strictness as string;
-    if (noteStrict === "strict") strictness = "strict";
-    if (noteStrict === "direct") strictness = "direct";
-  }
+  const noteStrict = parseSettings(noteSettings).strictness as string;
+  if (noteStrict === "strict") strictness = "strict";
+  if (noteStrict === "direct") strictness = "direct";
   const r = await askAI({
     kind: b.kind, noteText, selection: b.selection, history: hist,
     userMessage: b.message || (b.selection ? `Probe this: ${b.selection}` : "Help me with this note."),
     hintLevel: level,
-    plan: (user.plan || "free") as Plan,
     strictness,
   });
   const userLine = b.message || (b.selection ? `Probe: ${b.selection}` : "");

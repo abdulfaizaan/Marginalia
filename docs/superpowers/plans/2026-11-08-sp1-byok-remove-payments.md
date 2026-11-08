@@ -168,7 +168,7 @@ git commit -m "SP1: AES-GCM secret vault + users.ai_vendor/key/model/base column
   - `lib/engine.ts` → `AskInput { kind, noteText, selection?, history, userMessage, hintLevel, strictness }` (no `plan`); `askRespond` gate rule: level-4 answer iff `userMessage` asks AND `strictness !== "strict"` AND (`strictness === "direct"` OR walked, i.e. `hintLevel >= 3`).
   - Call sites no longer pass `plan`; margins route strictness read unconditionally from note settings.
 
-- [ ] **Step 1: Replace `lib/plans.ts`**
+- [x] **Step 1: Replace `lib/plans.ts`**
 
 ```ts
 // SP1: the app is free; one fair-use tier protects the server/db (the user pays their own AI bill).
@@ -180,7 +180,7 @@ export const CAPS = {
 };
 ```
 
-- [ ] **Step 2: Engine ladder** — in `lib/engine.ts`, change `AskInput` (drop `plan`), delete the old `pro` branch and make:
+- [x] **Step 2: Engine ladder** — in `lib/engine.ts`, change `AskInput` (drop `plan`), delete the old `pro` branch and make:
 
 ```ts
 // Level 4 (full answer): user asked AND strictness permits AND either Direct or has walked the rungs.
@@ -192,7 +192,7 @@ const allowed =
 
 …then keep the previous walked/system structure with `allowed` replacing the plan condition. `ThinkInput` also drops `plan` (same file).
 
-- [ ] **Step 3: Update check pins** (replace the plan-gated ladder block)
+- [x] **Step 3: Update check pins** (replace the plan-gated ladder block)
 
 ```ts
 // ---------- engine: ask ladder (plan-free rules) ----------
@@ -209,14 +209,14 @@ ok(strict.kind === "hint", "strict: never the answer");
 
 Also delete the entire `enforcePromo` import + its 3 pins.
 
-- [ ] **Step 4: Call sites** — in margins route: `const tier = CAPS;` and read strictness unconditionally (`const ns = String((parseSettings(String(note.settings)).strictness))`), pass no `plan` to `marginNotes`/`askAI` (Task 3 signature); cap copy → `"You have used your free monthly margin limit. Add your own AI key in Settings — versus waiting, limits reset next month."` In visual route: `const tier = CAPS` + copy `"Your free monthly visual limit is used up."` Versions route: `const cutoff = CAPS.versionsDays ? Date.now() - CAPS.versionsDays * 86_400_000 : 0` + `retentionDays: CAPS.versionsDays`. Export route: delete the 402 branch and the `tier` import; hideAi → `const hideAi = url.searchParams.get("ai") === "hide";`
+- [x] **Step 4: Call sites** — in margins route: `const tier = CAPS;` and read strictness unconditionally (`const ns = String((parseSettings(String(note.settings)).strictness))`), pass no `plan` to `marginNotes`/`askAI` (Task 3 signature); cap copy → `"You have used your free monthly margin limit. Add your own AI key in Settings — versus waiting, limits reset next month."` In visual route: `const tier = CAPS` + copy `"Your free monthly visual limit is used up."` Versions route: `const cutoff = CAPS.versionsDays ? Date.now() - CAPS.versionsDays * 86_400_000 : 0` + `retentionDays: CAPS.versionsDays`. Export route: delete the 402 branch and the `tier` import; hideAi → `const hideAi = url.searchParams.get("ai") === "hide";`
 
-- [ ] **Step 5: Run green**
+- [x] **Step 5: Run green**
 
 Run: `npm run check && npm run build`
 Expected: check PASS (pin count changes 32 → ~33 minus 5 old promo/ladder +5 new = ~33); build green (routes compile; UI tasks catch remaining UI references later — if build trips on a UI file importing TIERS, that file is listed as a Task 5/6 edit — fix ONLY by changing gating logic per this task and leave visual bits for its task).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add app/lib/plans.ts app/lib/engine.ts app/app/api app/scripts/check.ts

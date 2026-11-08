@@ -1,7 +1,7 @@
 import { db, uid } from "@/lib/db";
 import { getSessionUser, jsonError } from "@/lib/auth";
 import { buildVisual } from "@/lib/visualize";
-import { TIERS, type Plan } from "@/lib/plans";
+import { CAPS } from "@/lib/plans";
 import { usageGet, usageIncr } from "@/lib/admin";
 import { userWordsInDoc, plainText, type Doc } from "@/lib/exporters";
 
@@ -10,7 +10,7 @@ export async function POST(req: Request) {
   const user = await getSessionUser();
   if (!user) return jsonError(401, "Sign in first.");
   const b = await req.json() as { noteId: string; action: "create" | "pin"; selection?: string; visualId?: string };
-  const tier = TIERS[(user.plan || "free") as Plan] || TIERS.free;
+  const tier = CAPS; // SP1: single fair-use tier
   const note = db.prepare("SELECT * FROM notes WHERE id=? AND user_id=?").get(b.noteId, user.id) as any;
   if (!note) return jsonError(404, "Note not found.");
   const reindex = (doc: Doc) => {
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
   if (b.action === "create") {
     const u = usageGet(user.id);
     if (u.visuals >= tier.visualsMonth)
-      return Response.json({ capped: true, error: "Your monthly visualizations are used up. Upgrade for more." }, { status: 429 });
+      return Response.json({ capped: true, error: "Your free monthly visual limit is used up." }, { status: 429 });
     const { spec, error } = buildVisual(b.selection || String(note.text).slice(-400));
     if (!spec) return Response.json({ error: error || "Could not build a visual from that." }, { status: 400 });
     const id = uid();

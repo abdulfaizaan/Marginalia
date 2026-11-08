@@ -1,7 +1,7 @@
 import { db, uid, parseSettings } from "@/lib/db";
 import { getSessionUser, jsonError } from "@/lib/auth";
 import { marginNotes } from "@/lib/providers";
-import { TIERS, type Plan } from "@/lib/plans";
+import { CAPS } from "@/lib/plans";
 import { usageGet, usageIncr } from "@/lib/admin";
 import { capWords } from "@/lib/engine";
 import { userWordsInDoc, plainText, type Doc } from "@/lib/exporters";
@@ -32,19 +32,19 @@ export async function POST(req: Request, ctx: Ctx) {
     blocks?: { id: string; text: string }[]; changedIds?: string[]; pace?: string;
     marginId?: string; body?: string; rating?: number;
   };
-  const tier = TIERS[(user.plan || "free") as Plan] || TIERS.free;
+  const tier = CAPS; // SP1: single fair-use tier
   const nextNum = () => (db.prepare("SELECT COALESCE(MAX(num),0) m FROM margins WHERE note_id=?").get(id) as { m: number }).m + 1;
 
   if (b.action === "evaluate") {
     if (note.private) return Response.json({ ok: true, notes: [], provider: "journal-quiet" }); // Journal (Ask default) stays quiet in Think mode
     const u = usageGet(user.id);
     if (u.margin >= tier.notesMonth)
-      return Response.json({ capped: true, error: "You have used your margin notes for this month. Upgrade for more headroom." }, { status: 429 });
+      return Response.json({ capped: true, error: "You have used your free monthly margin limit. Add your own AI key in Settings — limits reset next month." }, { status: 429 });
     const blocks = (b.blocks || []).slice(0, 400).map((x) => ({ id: String(x.id).slice(0, 64), text: String(x.text || "").slice(0, 4000) }));
     const changedIds = (b.changedIds || []).slice(0, 40).map(String);
     const dismissed = (db.prepare("SELECT body FROM margins WHERE note_id=? AND status IN ('dismissed','thread')").all(id) as { body: string }[]).map((r) => r.body);
     const pace = (b.pace || "slow") as "slow" | "normal" | "frequent";
-    const res = await marginNotes({ blocks, changedIds, pace, dismissed, plan: (user.plan || "free") as Plan, noteWords: note.words as number });
+    const res = await marginNotes({ blocks, changedIds, pace, dismissed, noteWords: note.words as number });
     const created: unknown[] = [];
     for (const d of res.notes) {
       const mid = uid();
@@ -62,7 +62,7 @@ export async function POST(req: Request, ctx: Ctx) {
     if (b.marginId) {
       const u = usageGet(user.id);
       if (u.margin >= tier.notesMonth)
-        return Response.json({ capped: true, error: "You have used your margin notes for this month. Upgrade for more headroom." }, { status: 429 });
+        return Response.json({ capped: true, error: "You have used your free monthly margin limit. Add your own AI key in Settings — limits reset next month." }, { status: 429 });
       const m = db.prepare("SELECT * FROM margins WHERE id=? AND note_id=? AND user_id=?").get(b.marginId, id, user.id) as any;
       if (!m) return jsonError(404, "Margin note not found.");
       const transcript = (m.reply ? m.reply + "\n" : "") + "You: " + body;
@@ -73,17 +73,15 @@ export async function POST(req: Request, ctx: Ctx) {
       // free-standing question in the margin panel → behaves like Ask, lands as chat
       const u = usageGet(user.id);
       if (u.margin >= tier.notesMonth)
-        return Response.json({ capped: true, error: "You have used your margin notes for this month. Upgrade for more headroom." }, { status: 429 });
+        return Response.json({ capped: true, error: "You have used your free monthly margin limit. Add your own AI key in Settings — limits reset next month." }, { status: 429 });
       const mid = uid();
       db.prepare("INSERT INTO ask_messages VALUES(?,?,?,?,?,?,?,?)").run(mid, id, user.id, "user", body, "nudge", 0, Date.now());
       let strictness: "strict" | "balanced" | "direct" = "balanced";
-      if (user.plan === "pro") {
-        const ns = parseSettings(String(note.settings)).strictness as string;
-        if (ns === "strict") strictness = "strict";
-        if (ns === "direct") strictness = "direct";
-      }
+      const ns = parseSettings(String(note.settings)).strictness as string;
+      if (ns === "strict") strictness = "strict";
+      if (ns === "direct") strictness = "direct";
       const answer = await import("@/lib/providers").then((p) =>
-        p.askAI({ kind: "chat", noteText: note.text, history: [], userMessage: body, hintLevel: 1, plan: (user.plan || "free") as Plan, strictness })
+        p.askAI({ kind: "chat", noteText: note.text, history: [], userMessage: body, hintLevel: 1, strictness })
       );
       const aid = uid();
       db.prepare("INSERT INTO ask_messages VALUES(?,?,?,?,?,?,?,?)").run(aid, id, user.id, "assistant", answer.body, answer.kind, answer.level, Date.now());

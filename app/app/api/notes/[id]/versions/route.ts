@@ -1,6 +1,6 @@
 import { db, uid, parseSettings } from "@/lib/db";
 import { getSessionUser, jsonError } from "@/lib/auth";
-import { TIERS, type Plan } from "@/lib/plans";
+import { CAPS } from "@/lib/plans";
 import { userWordsInDoc, plainText, type Doc } from "@/lib/exporters";
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -10,15 +10,14 @@ export async function GET(req: Request, ctx: Ctx) {
   const user = await getSessionUser();
   if (!user) return jsonError(401, "Sign in first.");
   const { id } = await ctx.params;
-  const tier = TIERS[(user.plan || "free") as Plan] || TIERS.free;
-  const cutoff = tier.versionsDays ? Date.now() - tier.versionsDays * 86_400_000 : 0;
+  const cutoff = CAPS.versionsDays ? Date.now() - CAPS.versionsDays * 86_400_000 : 0;
   // ownership: this note must belong to the caller
   const owned = db.prepare("SELECT id FROM notes WHERE id=? AND user_id=?").get(id, user.id);
   if (!owned) return jsonError(404, "Note not found.");
   const rows = db.prepare("SELECT id,words,created_at FROM versions WHERE note_id=? AND created_at>? ORDER BY created_at DESC LIMIT 60").all(id, cutoff);
   // housekeeping: prune beyond window
   if (cutoff) db.prepare("DELETE FROM versions WHERE note_id=? AND created_at<=?").run(id, cutoff);
-  return Response.json({ versions: rows, retentionDays: tier.versionsDays });
+  return Response.json({ versions: rows, retentionDays: CAPS.versionsDays });
 }
 
 // POST — restore a version into the live note (snapshots current state first)
