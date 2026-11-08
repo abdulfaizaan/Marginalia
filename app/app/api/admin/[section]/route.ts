@@ -18,14 +18,11 @@ export async function GET(req: Request, ctx: Ctx) {
   if (section === "users") {
     const filter = url.searchParams.get("plan") || "All";
     const q = (url.searchParams.get("q") || "").toLowerCase().trim();
-    let rows = db.prepare("SELECT id,email,name,plan,promo,joined_at,last_active,status FROM users WHERE role!='admin' ORDER BY joined_at").all() as any[];
-    if (filter !== "All") rows = rows.filter((r) => r.plan.toLowerCase() === filter.toLowerCase());
+    let rows = db.prepare("SELECT id,email,name,ai_vendor,joined_at,last_active,status FROM users WHERE role!='admin' ORDER BY joined_at").all() as any[];
+    if (filter === "keyed") rows = rows.filter((r) => !!r.ai_vendor);
+    else if (filter === "demo") rows = rows.filter((r) => !r.ai_vendor);
     if (q) rows = rows.filter((r) => r.email.toLowerCase().includes(q));
     return Response.json({ users: rows });
-  }
-  if (section === "promo-codes") {
-    const codes = db.prepare("SELECT code,total,used,note FROM promo_codes ORDER BY rowid").all();
-    return Response.json({ codes });
   }
   if (section === "ai-quality") {
     // user text stays hidden: reviewers see the AI note only
@@ -39,21 +36,12 @@ export async function GET(req: Request, ctx: Ctx) {
   return jsonError(404, "Unknown section.");
 }
 
-// POST actions: promo create; review resolve; user deletion completion
+// POST actions: review resolve; user deletion completion
 export async function POST(req: Request, ctx: Ctx) {
   const user = await getSessionUser();
   if (!user || user.role !== "admin") return jsonError(403, "Admins only.");
   const { section } = await ctx.params;
-  const b = await req.json() as { action: string; code?: string; total?: number; note?: string; id?: string; userId?: string; decision?: string };
-  if (b.action === "add_promo" && section === "promo-codes") {
-    const code = (b.code || "").trim().toUpperCase();
-    if (!/^[A-Z0-9]{4,16}$/.test(code)) return jsonError(400, "Code: 4-16 letters/digits.");
-    if (!b.total || b.total < 1 || b.total > 100000) return jsonError(400, "Total redemptions 1-100000.");
-    if (db.prepare("SELECT 1 FROM promo_codes WHERE code=?").get(code)) return jsonError(409, "That code exists.");
-    db.prepare("INSERT INTO promo_codes VALUES(?,?,0,?)").run(code, b.total, b.note?.slice(0, 80) || "");
-    auditLog(user.email, `Promo created: ${code} x${b.total}`);
-    return Response.json({ ok: true });
-  }
+  const b = await req.json() as { action: string; id?: string; userId?: string; decision?: string };
   if (b.action === "review" && section === "ai-quality") {
     if (!b.id) return jsonError(400, "Missing note id.");
     const m = db.prepare("SELECT id FROM margins WHERE id=? AND review_state='flagged'").get(b.id);

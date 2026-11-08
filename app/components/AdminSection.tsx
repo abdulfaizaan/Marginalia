@@ -7,13 +7,12 @@ import { api, timeAgo } from "@/lib/client";
 
 const TITLES: Record<string, string> = {
   users: "Users",
-  "promo-codes": "Promo codes",
   "ai-quality": "AI quality",
   "audit-log": "Audit log",
 };
 
 export default function AdminSection({ section }: { section: string }) {
-  return <AdminShell active={TITLES[section] || section}>{section === "users" ? <Users /> : section === "promo-codes" ? <Promos /> : section === "ai-quality" ? <Quality /> : <Audit />}</AdminShell>;
+  return <AdminShell active={TITLES[section] || section}>{section === "users" ? <Users /> : section === "ai-quality" ? <Quality /> : <Audit />}</AdminShell>;
 }
 
 function Users() {
@@ -41,7 +40,7 @@ function Users() {
       <div className="flex flex-wrap items-center gap-3">
         <h1 className="mr-auto font-serif text-[30px] font-medium text-white">Users</h1>
         <div className="flex rounded-xl bg-white/5 p-1">
-          {["All", "Free", "Plus", "Pro"].map((f) => (
+          {["All", "Keyed", "Demo"].map((f) => (
             <button key={f} onClick={() => setFilter(f)} className={`h-8 rounded-[8px] px-3 text-[12.5px] font-bold ${filter === f ? "bg-white/15 text-white" : "text-white/60"}`}>{f}</button>
           ))}
         </div>
@@ -52,14 +51,14 @@ function Users() {
       <div className="mt-5 overflow-hidden rounded-2xl border border-white/10">
         <table className="w-full text-left text-[13px]">
           <thead className="bg-white/[0.04] text-white/55">
-            <tr><th className="px-4 py-2.5">Email</th><th className="px-4 py-2.5">Plan</th><th className="px-4 py-2.5">Joined</th><th className="px-4 py-2.5">Last active</th><th className="px-4 py-2.5">Status</th><th /></tr>
+            <tr><th className="px-4 py-2.5">Email</th><th className="px-4 py-2.5">AI</th><th className="px-4 py-2.5">Joined</th><th className="px-4 py-2.5">Last active</th><th className="px-4 py-2.5">Status</th><th /></tr>
           </thead>
           <tbody className="divide-y divide-white/10">
             {rows.map((u) => (
               <Fragment key={u.id}>
                 <tr className="text-white/85">
                   <td className="px-4 py-2.5">{u.email}</td>
-                  <td className="px-4 py-2.5"><Chip small kind={u.plan === "free" ? "question" : "direction"}>{u.plan}</Chip></td>
+                  <td className="px-4 py-2.5"><Chip small kind={u.ai_vendor ? "direction" : "question"}>{u.ai_vendor || "demo"}</Chip></td>
                   <td className="px-4 py-2.5 text-white/55">{timeAgo(u.joined_at)}</td>
                   <td className="px-4 py-2.5 text-white/55">{timeAgo(u.last_active)}</td>
                   <td className="px-4 py-2.5">{u.status === "deletion_requested" ? <span className="font-bold text-rose-300">deletion requested</span> : <span className="text-white/50">active</span>}</td>
@@ -70,7 +69,7 @@ function Users() {
                     <td colSpan={6} className="px-4 py-3 text-white/65">
                       <div className="flex flex-wrap items-center gap-6">
                         <span>Name: {u.name || "—"}</span>
-                        <span>Promo: {u.promo || "—"}</span>
+                        <span>AI: {u.ai_vendor || "demo margins (no key)"}</span>
                         <span className="text-white/40">Member content stays hidden — admins cannot open notebooks.</span>
                         {u.status === "deletion_requested" && (
                           <button onClick={() => completeDeletion(u.id)} className="rounded-lg bg-rose-600 px-3 py-1.5 text-[12px] font-bold text-white">Complete deletion</button>
@@ -84,56 +83,6 @@ function Users() {
             {!rows.length && <tr><td colSpan={6} className="px-4 py-6 text-white/50">No users match.</td></tr>}
           </tbody>
         </table>
-      </div>
-    </div>
-  );
-}
-
-function Promos() {
-  const [rows, setRows] = useState<{ code: string; total: number; used: number; note: string }[]>([]);
-  const [form, setForm] = useState({ code: "", total: "", note: "" });
-  const [err, setErr] = useState<string | null>(null);
-
-  async function load() {
-    try { setRows((await api<{ codes: { code: string; total: number; used: number; note: string }[] }>("/api/admin/promo-codes")).codes); }
-    catch (x: unknown) { setErr(x instanceof Error ? x.message : "Load failed."); }
-  }
-  useEffect(() => { void load(); }, []);
-
-  async function add() {
-    setErr(null);
-    try {
-      await api("/api/admin/promo-codes", { method: "POST", body: JSON.stringify({ action: "add_promo", code: form.code, total: Number(form.total), note: form.note }) });
-      setForm({ code: "", total: "", note: "" });
-      load();
-    } catch (x: unknown) { setErr(x instanceof Error ? x.message : "Create failed."); }
-  }
-
-  return (
-    <div>
-      <h1 className="font-serif text-[30px] font-medium text-white">Promo codes</h1>
-      <div className="mt-5 grid gap-6 lg:grid-cols-[320px,1fr]">
-        <div className="rounded-2xl border border-white/10 bg-white/[0.05] p-5">
-          <div className="text-[14px] font-bold text-white">Create a code</div>
-          <div className="mt-3 space-y-3 [&_input]:border-white/15 [&_input]:bg-white/[0.06] [&_input]:text-white [&_input]:placeholder:text-white/35">
-            <input className={inputCls} placeholder="CODE (4-16 chars)" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })} />
-            <input className={inputCls} placeholder="Max redemptions" inputMode="numeric" value={form.total} onChange={(e) => setForm({ ...form, total: e.target.value.replace(/\D/g, "") })} />
-            <input className={inputCls} placeholder="Note" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
-            {err && <p className="text-[12.5px] text-rose-300">{err}</p>}
-            <button onClick={add} className="w-full rounded-xl bg-white py-2.5 text-[13.5px] font-bold text-[#0e1524]">Create</button>
-          </div>
-        </div>
-        <div className="rounded-2xl border border-white/10">
-          <table className="w-full text-left text-[13px]">
-            <thead className="bg-white/[0.04] text-white/55"><tr><th className="px-4 py-2.5">Code</th><th className="px-4 py-2.5">Used</th><th className="px-4 py-2.5">Cap</th><th className="px-4 py-2.5">Note</th></tr></thead>
-            <tbody className="divide-y divide-white/10 text-white/85">
-              {rows.map((c) => (
-                <tr key={c.code}><td className="px-4 py-2.5 font-mono font-bold">{c.code}</td><td className="px-4 py-2.5">{c.used}</td><td className="px-4 py-2.5">{c.total}</td><td className="px-4 py-2.5 text-white/55">{c.note}</td></tr>
-              ))}
-              {!rows.length && <tr><td colSpan={4} className="px-4 py-6 text-white/50">None yet.</td></tr>}
-            </tbody>
-          </table>
-        </div>
       </div>
     </div>
   );
@@ -224,6 +173,6 @@ function Audit() {
   );
 }
 
-interface URow { id: string; email: string; name: string; plan: string; promo: string | null; joined_at: number; last_active: number; status: string }
+interface URow { id: string; email: string; name: string; ai_vendor: string | null; joined_at: number; last_active: number; status: string }
 interface QRow { id: string; type: string; body: string }
 interface QRated { body: string; type: string; rating: number }

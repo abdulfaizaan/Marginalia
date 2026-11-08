@@ -7,7 +7,6 @@ import LinkHint from "@/components/LinkHint";
 const NAV: [string, string][] = [
   ["/admin", "Overview"],
   ["/admin/users", "Users"],
-  ["/admin/promo-codes", "Promo codes"],
   ["/admin/ai-quality", "AI quality"],
   ["/admin/audit-log", "Audit log"],
 ];

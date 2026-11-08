@@ -444,7 +444,7 @@ Run: `grep -RniE "LAUNCH50|Upgrade|/pricing|priceCents|Plus plan|Pro plan|cancel
 Expected: only `app/pricing/page.tsx` itself (redirect).
 
 - [x] **Step 5: Verify build + green check** — `npm run check && npm run build` → PASS.
-- [ ] **Step 6: Commit** — `git commit -m "SP1: payments/promo/pricing surfaces removed; free copy everywhere"`
+- [x] **Step 6: Commit** — `git commit -m "SP1: payments/promo/pricing surfaces removed; free copy everywhere"`
 
 ---
 
@@ -461,11 +461,11 @@ Expected: only `app/pricing/page.tsx` itself (redirect).
 
 **Interfaces:** Produces: metrics includes `keyed: number` (`SELECT COUNT(*) FROM users WHERE ai_vendor IS NOT NULL`).
 
-- [ ] **Step 1: Section lists** — `SECTIONS`/`NAV`/`TITLES` to the three sections; delete `Promos` and promo UI in AdminSection; remove badge branch `section === "promo-codes"`.
-- [ ] **Step 2: api/admin/[section] route** — remove branches/case for `promo-codes` (GET list + POST add/redeem); users GET: `SELECT id,email,name,ai_vendor,joined_at,last_active,status FROM users WHERE role!='admin'` (keep `plan` OUT of the select; AdminSection `URow.plan` → `ai_vendor`), filter param `plan=` → accept `All|keyed|demo` (`keyed` → `ai_vendor IS NOT NULL`, `demo` → null).
-- [ ] **Step 3: Users table chip** — `{u.ai_vendor ? <Chip kind="direction">{u.ai_vendor}</Chip> : <Chip kind="question">demo</Chip>}`; remove `Promo:` column/line.
-- [ ] **Step 4: Overview + metrics** — `lib/admin.ts` metrics: remove promo block; add `keyed`; Overview tile: `AI keys set` with count `X of Y users`.
-- [ ] **Step 5: Verify** — `grep -Rni "promo" app/app/api/admin app/components/Admin* app/lib/admin.ts` → no matches; `npm run build` PASS.
+- [x] **Step 1: Section lists** — `SECTIONS`/`NAV`/`TITLES` to the three sections; delete `Promos` and promo UI in AdminSection; remove badge branch `section === "promo-codes"`.
+- [x] **Step 2: api/admin/[section] route** — remove branches/case for `promo-codes` (GET list + POST add/redeem); users GET: `SELECT id,email,name,ai_vendor,joined_at,last_active,status FROM users WHERE role!='admin'` (keep `plan` OUT of the select; AdminSection `URow.plan` → `ai_vendor`), filter param `plan=` → accept `All|keyed|demo` (`keyed` → `ai_vendor IS NOT NULL`, `demo` → null).
+- [x] **Step 3: Users table chip** — `{u.ai_vendor ? <Chip kind="direction">{u.ai_vendor}</Chip> : <Chip kind="question">demo</Chip>}`; remove `Promo:` column/line.
+- [x] **Step 4: Overview + metrics** — `lib/admin.ts` metrics: remove promo block; add `keyed`; Overview tile: `AI keys set` with count `X of Y users`.
+- [x] **Step 5: Verify** — `grep -Rni "promo" app/app/api/admin app/components/Admin* app/lib/admin.ts` → no matches; `npm run build` PASS.
 - [ ] **Step 6: Commit** — `git commit -m "SP1: admin to Users/AI quality/Audit; keyed-vs-demo badges; promo endpoints gone"`
 
 ---

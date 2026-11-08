@@ -6,7 +6,7 @@ import AdminSection from "@/components/AdminSection";
 import RouteFx from "@/components/RouteFx";
 import { AdminSkeleton } from "@/components/Skeletons";
 
-const SECTIONS = ["users", "promo-codes", "ai-quality", "audit-log"];
+const SECTIONS = ["users", "ai-quality", "audit-log"];
 
 export default async function AdminSectionPage({ params }: { params: Promise<{ section: string }> }) {
   return (

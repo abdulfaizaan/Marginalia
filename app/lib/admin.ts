@@ -16,27 +16,27 @@ export function usageIncr(userId: string, k: "margin" | "visuals", by = 1) {
 
 export function metrics() {
   const now = Date.now();
-  const users = db.prepare("SELECT id,plan,joined_at,last_active,status FROM users WHERE role!='admin'").all() as { id: string; plan: string; joined_at: number; last_active: number; status: string }[];
+  const users = db.prepare("SELECT id,ai_vendor,joined_at,last_active,status FROM users WHERE role!='admin'").all() as { id: string; ai_vendor: string | null; joined_at: number; last_active: number; status: string }[];
   const noteRows = db.prepare("SELECT user_id,words,ai_words FROM notes").all() as { user_id: string; words: number; ai_words: number }[];
   const notesByUser = new Map<string, { words: number; ai_words: number }>();
   for (const n of noteRows) notesByUser.set(n.user_id, { words: (notesByUser.get(n.user_id)?.words || 0) + (n.ai_words ? 0 : n.words), ai_words: (notesByUser.get(n.user_id)?.ai_words || 0) + 0 });
   const rated = db.prepare("SELECT COALESCE(SUM(rating=1),0) up, COALESCE(SUM(rating=-1),0) down FROM margins").get() as { up: number; down: number };
   const active = users.filter((u) => u.last_active > now - 30 * DAY);
-  const paid = active.filter((u) => u.plan !== "free");
+  const keyed = users.filter((u) => !!u.ai_vendor).length;
   const activated = users.filter((u) => (notesByUser.get(u.id)?.words || 0) >= 200);
   const totals = [...notesByUser.values()].reduce((a, n) => ({ words: a.words + n.words, ai: a.ai + 0 }), { words: 0, ai: 0 });
   const origRatio = totals.words ? 1 : 0;
   const wk4 = users.filter((u) => now - u.joined_at >= 28 * DAY && u.last_active > now - 7 * DAY);
-  const promo = db.prepare("SELECT * FROM promo_codes WHERE code='LAUNCH50'").get() as { used: number; total: number } | undefined;
   const pct = (a: number, b: number) => (b ? Math.round((a / b) * 100) + "%" : "—");
   return {
     activation: { value: pct(activated.length, users.length || 1), target: "Target 55%", onTarget: (activated.length / (users.length || 1)) >= 0.55 },
     originalThought: { value: origRatio ? "—" : "—", target: "Target 85% or more", onTarget: true, sample: true },
     usefulness: { value: rated.up + rated.down ? Math.round((rated.up / (rated.up + rated.down)) * 100) + "%" : "—", target: "Target 60% or more", onTarget: rated.up + rated.down === 0 || rated.up / (rated.up + rated.down) >= 0.6 },
     retention: { value: pct(wk4.length, users.length || 1), target: "Target 25%", onTarget: (wk4.length / (users.length || 1)) >= 0.25 },
-    conversion: { value: pct(paid.length, active.length || 1), target: "Target 4%", onTarget: (paid.length / (active.length || 1)) >= 0.04 },
+    byok: { value: pct(keyed, users.length || 1), target: "Target 20%", onTarget: (keyed / (users.length || 1)) >= 0.2 },
     aiCost: { value: "27%", target: "Ceiling 30%", onTarget: true, sample: true },
-    promo: { used: promo?.used ?? 0, total: promo?.total ?? 100 },
+    keyed,
+    userCount: users.length,
   };
 }
 // //: originalThought is computed per note in the editor footer from real ratios; dashboard keeps a stub until analytics land.

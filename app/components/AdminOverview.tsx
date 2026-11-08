@@ -10,12 +10,12 @@ const M_KEYS = [
   ["originalThought", "Original thought", "Share of AI-origin words on pages"],
   ["usefulness", "Usefulness", "👍 rate on margin notes"],
   ["retention", "4-week retention", "Active in week 4 after joining"],
-  ["conversion", "Conversion", "Active users on paid plans"],
+  ["byok", "BYOK adoption", "Users running margins on their own AI key"],
   ["aiCost", "AI cost share", "Of revenue, ceiling 30%"],
 ] as const;
 
 interface Metrics {
-  [k: string]: { value: string; target: string; onTarget: boolean; sample?: boolean } | { used: number; total: number };
+  [k: string]: { value: string; target: string; onTarget: boolean; sample?: boolean } | { used: number; total: number } | number;
 }
 
 export default function AdminOverview() {
@@ -35,7 +35,7 @@ export default function AdminOverview() {
     setFlagged((q) => q.filter((f) => f.id !== id));
   }
 
-  const promo = m?.promo as { used: number; total: number } | undefined;
+  const byok = m?.byok as { value: string; target: string; onTarget: boolean } | undefined;
 
   return (
     <AdminShell active="Overview">
@@ -69,12 +69,12 @@ export default function AdminOverview() {
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr,1.2fr]">
         <div className="rounded-2xl border border-white/10 bg-white/[0.05] p-5">
-          <div className="text-[14px] font-bold text-white">LAUNCH50 code</div>
-          <p className="mt-1 text-[12.5px] text-white/55">{promo ? `${promo.used} of ${promo.total} redemptions used` : "…"}</p>
+          <div className="text-[14px] font-bold text-white">AI keys set</div>
+          <p className="mt-1 text-[12.5px] text-white/55">{typeof m?.keyed === "number" && typeof m?.userCount === "number" ? `${m.keyed} of ${m.userCount} users bring their own key` : "…"}</p>
           <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
-            <div className="h-full rounded-full bg-[#6b93ff]" style={{ width: `${promo ? Math.min(100, (promo.used / promo.total) * 100) : 0}%` }} />
+            <div className="h-full rounded-full bg-[#6b93ff]" style={{ width: byok ? byok.value : "0%" }} />
           </div>
-          <p className="mt-2 text-[12px] text-white/50">After 100 uses the code stops — server-enforced at checkout.</p>
+          <p className="mt-2 text-[12px] text-white/50">Keys are AES-GCM-encrypted at rest; users pay their own vendor bill.</p>
         </div>
 
         <div className="rounded-2xl border border-white/10 bg-white/[0.05] p-5">
