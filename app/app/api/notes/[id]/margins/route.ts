@@ -1,4 +1,4 @@
-import { db, uid, parseSettings } from "@/lib/db";
+import { db, uid, parseSettings, userAiConfig } from "@/lib/db";
 import { getSessionUser, jsonError } from "@/lib/auth";
 import { marginNotes } from "@/lib/providers";
 import { CAPS } from "@/lib/plans";
@@ -44,7 +44,8 @@ export async function POST(req: Request, ctx: Ctx) {
     const changedIds = (b.changedIds || []).slice(0, 40).map(String);
     const dismissed = (db.prepare("SELECT body FROM margins WHERE note_id=? AND status IN ('dismissed','thread')").all(id) as { body: string }[]).map((r) => r.body);
     const pace = (b.pace || "slow") as "slow" | "normal" | "frequent";
-    const res = await marginNotes({ blocks, changedIds, pace, dismissed, noteWords: note.words as number });
+    const cfg = userAiConfig(user.id);
+    const res = await marginNotes({ blocks, changedIds, pace, dismissed, noteWords: note.words as number }, cfg);
     const created: unknown[] = [];
     for (const d of res.notes) {
       const mid = uid();
@@ -81,7 +82,7 @@ export async function POST(req: Request, ctx: Ctx) {
       if (ns === "strict") strictness = "strict";
       if (ns === "direct") strictness = "direct";
       const answer = await import("@/lib/providers").then((p) =>
-        p.askAI({ kind: "chat", noteText: note.text, history: [], userMessage: body, hintLevel: 1, strictness })
+        p.askAI({ kind: "chat", noteText: note.text, history: [], userMessage: body, hintLevel: 1, strictness }, userAiConfig(user.id))
       );
       const aid = uid();
       db.prepare("INSERT INTO ask_messages VALUES(?,?,?,?,?,?,?,?)").run(aid, id, user.id, "assistant", answer.body, answer.kind, answer.level, Date.now());

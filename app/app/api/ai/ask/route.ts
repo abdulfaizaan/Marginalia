@@ -1,4 +1,4 @@
-import { db, uid, parseSettings } from "@/lib/db";
+import { db, uid, parseSettings, userAiConfig } from "@/lib/db";
 import { getSessionUser, jsonError } from "@/lib/auth";
 import { askAI, journalAI } from "@/lib/providers";
 import { CAPS } from "@/lib/plans";
@@ -44,7 +44,7 @@ export async function POST(req: Request) {
     userMessage: b.message || (b.selection ? `Probe this: ${b.selection}` : "Help me with this note."),
     hintLevel: level,
     strictness,
-  });
+  }, userAiConfig(user.id));
   const userLine = b.message || (b.selection ? `Probe: ${b.selection}` : "");
   if (userLine) db.prepare("INSERT INTO ask_messages VALUES(?,?,?,?,?,?,?,?)").run(uid(), noteId, user.id, "user", userLine.slice(0, 2000), "nudge", 0, Date.now());
   db.prepare("INSERT INTO ask_messages VALUES(?,?,?,?,?,?,?,?)").run(uid(), noteId, user.id, "assistant", r.body, r.kind, r.level, Date.now());

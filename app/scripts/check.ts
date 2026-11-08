@@ -46,6 +46,18 @@ ok(journalRespond("I can't go on anymore with this.").kind === "care", "journal 
 ok(journalRespond("just a quiet day, thinking it over").kind === "reflect", "journal non-crisis reflects");
 ok(journalRespond("no reason to live").body.includes("988") || journalRespond("no reason to live").body.includes("emergency"), "care message carries resources");
 
+// ---------- providers: BYOK routing ----------
+const { routeFor } = await import("../lib/providers.ts");
+ok(routeFor(null, null) === null, "routeFor: no config → offline");
+ok(routeFor({ vendor: null }, null) === null, "routeFor: vendor null → offline");
+ok(routeFor({ vendor: "custom", base: undefined }, "k") === null, "routeFor: custom w/o base → offline (fail closed)");
+const r = routeFor({ vendor: "openai", model: null }, "sk-1");
+ok(!!r && r.name === "openai" && r.model === "gpt-4o-mini", "routeFor: openai default model");
+const rx = routeFor({ vendor: "xai" }, "k");
+ok(!!rx && rx.base === "https://api.x.ai/v1" && rx.model === "grok-3-mini", "routeFor: xai base/model");
+const rc = routeFor({ vendor: "custom", base: "http://127.0.0.1:11434/v1", model: "llama3.1" }, "o");
+ok(!!rc && rc.name === "custom" && rc.base === "http://127.0.0.1:11434/v1", "routeFor: custom base honored");
+
 // ---------- visualize: pair parsing + LCS grid ----------
 const pair = parsePair("starting with ABCB against BDCB.");
 ok(!!pair && pair.a === "ABCB" && pair.b === "BDCB", "parsePair reads the mock selection");

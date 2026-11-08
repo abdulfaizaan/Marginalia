@@ -1,31 +1,36 @@
-import { thinkEvaluate, askRespond, journalRespond, validDraft, capWords, countWords, type MarginDraft, type ThinkInput, type AskInput, type AskResp, type JournalResp } from "./engine";
+import { thinkEvaluate, askRespond, journalRespond, validDraft, capWords, countWords, type MarginDraft, type ThinkInput, type AskInput, type AskResp, type JournalResp } from "./engine.ts";
 
-// Model routing (SP1 env fallback — replaced by per-user BYOK in Task 3):
-// OPENAI_API_KEY → OpenAI; else XAI → Gemini fallback; missing/dummy keys → offline engine.
+// SP1 BYOK routing: every AI call routes through the signed-in user's own key/config.
+// No config, no key, or any failure → offline deterministic engine (fail closed).
 
-const OPENAI_BASE = process.env.OPENAI_BASE_URL || "https://api.openai.com/v1";
-const XAI_BASE = process.env.XAI_BASE_URL || "https://api.x.ai/v1";
-const GEMINI_BASE = process.env.GEMINI_BASE_URL || "https://generativelanguage.googleapis.com/v1beta";
+const VENDOR_DEFAULTS = {
+  openai: { base: "https://api.openai.com/v1", model: "gpt-4o-mini" },
+  xai:    { base: "https://api.x.ai/v1",      model: "grok-3-mini" },
+  gemini: { base: "https://generativelanguage.googleapis.com/v1beta", model: "gemini-2.0-flash" },
+} as const;
 
-const real = (k: string | undefined) => !!k && !/dummy|placeholder|your[-_]?key/i.test(k);
+export interface Rt { name: "openai" | "xai" | "gemini" | "custom"; base: string; key: string; model: string }
 
-function routeFor(): { name: "openai" | "xai" | "gemini"; base: string; key: string; model: string } | null {
-  if (real(process.env.OPENAI_API_KEY))
-    return { name: "openai", base: OPENAI_BASE, key: process.env.OPENAI_API_KEY!, model: process.env.OPENAI_MODEL || "gpt-4o-mini" };
-  if (real(process.env.XAI_API_KEY))
-    return { name: "xai", base: XAI_BASE, key: process.env.XAI_API_KEY!, model: process.env.XAI_MODEL || "grok-3-mini" };
-  if (real(process.env.GEMINI_API_KEY))
-    return { name: "gemini", base: GEMINI_BASE, key: process.env.GEMINI_API_KEY!, model: process.env.GEMINI_MODEL || "gemini-2.0-flash" };
-  return null;
+export function routeFor(cfg: { vendor?: string | null; model?: string | null; base?: string | null } | null, key: string | null): Rt | null {
+  if (!key || !cfg?.vendor) return null;
+  if (cfg.vendor === "custom") {
+    if (!cfg.base || !cfg.model) return null; // half-saved custom config must never hit fetch()
+    return { name: "custom" as const, base: cfg.base, key, model: cfg.model };
+  }
+  const d = (VENDOR_DEFAULTS as unknown as Record<string, { base: string; model: string }>)[cfg.vendor];
+  if (!d) return null;
+  return { name: cfg.vendor as "openai" | "xai" | "gemini", base: d.base, key, model: cfg.model || d.model };
 }
 
 export interface MarginRequest extends ThinkInput { dismissed: string[] }
 export interface MarginsResult { notes: MarginDraft[]; provider: string }
 
+type Kc = { vendor: string | null; model?: string | null; base?: string | null; key: string | null } | null | undefined;
+
 // ---------- Think with You ----------
-export async function marginNotes(req: MarginRequest): Promise<MarginsResult> {
+export async function marginNotes(req: MarginRequest, keyCfg: Kc = null): Promise<MarginsResult> {
   const offline = () => thinkEvaluate({ ...req }).map((d) => ({ ...d, body: capWords(d.body) }));
-  const route = routeFor();
+  const route = routeFor(keyCfg, keyCfg?.key || null);
   if (!route) return { notes: offline().filter(validDraft).slice(0, 3), provider: "offline" };
   try {
     const sys = [
@@ -57,8 +62,8 @@ export async function marginNotes(req: MarginRequest): Promise<MarginsResult> {
 }
 
 // ---------- Ask mode ----------
-export async function askAI(inp: AskInput): Promise<(AskResp & { provider: string })> {
-  const route = routeFor();
+export async function askAI(inp: AskInput, keyCfg: Kc = null): Promise<(AskResp & { provider: string })> {
+  const route = routeFor(keyCfg, keyCfg?.key || null);
   if (!route) return { ...askRespond(inp), provider: "offline" };
   try {
     const sys = [
@@ -72,7 +77,7 @@ export async function askAI(inp: AskInput): Promise<(AskResp & { provider: strin
     const raw = JSON.parse(await chat(route, sys, user));
     const body = capWords(String(raw.body || ""));
     if (countWords(body) < 2) return { ...askRespond(inp), provider: route.name + "+offline" };
-    // the offline gate is authoritative: a model may never unlock a rung the plan forbids
+    // the offline gate is authoritative: a model may never unlock a rung the strictness forbids
     const kind = raw.kind === "answer" ? "answer" : "hint";
     if (kind === "hint") return { body, kind, level: Math.min(3, Math.max(1, Number(raw.level) || 1)), provider: route.name };
     const gate = askRespond({ ...inp, userMessage: "Just give me the full answer", hintLevel: Math.max(inp.hintLevel, 3) });

@@ -2,6 +2,7 @@ import { DatabaseSync } from "node:sqlite";
 import { randomUUID, scryptSync, randomBytes, timingSafeEqual } from "node:crypto";
 import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { decryptSecret } from "./crypto";
 
 // ---------- schema ----------
 const SCHEMA = `
@@ -203,6 +204,15 @@ export const db: DatabaseSync = (g.__marginaliaDb ??= createDb());
 export interface NoteRow { id: string; user_id: string; notebook_id: string; title: string; content_json: string; text: string; words: number; ai_words: number; mode: "think" | "ask"; settings: string; private: number; pinned_visual: string | null; created_at: number; updated_at: number; }
 export interface MarginRow { id: string; note_id: string; user_id: string; anchor: string; num: number; type: string; body: string; reply: string | null; status: string; rating: number | null; level: number; want_visual: number; review_state: string | null; created_at: number; orig_created_at: number | null; }
 export interface UserRow { id: string; email: string; password: string; name: string; plan: string; role: string; promo: string | null; promo_months: number; status: string; age_ok: number; settings: string; joined_at: number; last_active: number; ai_vendor: string | null; ai_key_enc: Buffer | null; ai_model: string | null; ai_base: string | null; }
+
+// SP1: the signed-in user's own AI vendor config, decrypted per request; never logged, never returned to clients.
+export interface AiKeyCfg { vendor: string | null; model: string | null; base: string | null; key: string | null }
+export function userAiConfig(userId: string): AiKeyCfg | null {
+  const r = db.prepare("SELECT ai_vendor, ai_key_enc, ai_model, ai_base FROM users WHERE id=?").get(userId) as
+    | { ai_vendor: string | null; ai_key_enc: Buffer | null; ai_model: string | null; ai_base: string | null } | undefined;
+  if (!r?.ai_vendor) return null;
+  return { vendor: r.ai_vendor, model: r.ai_model, base: r.ai_base, key: decryptSecret(r.ai_key_enc) };
+}
 
 export function parseSettings(s: string) {
   return { pace: "slow", strictness: "balanced", margins: "single", focus: false, font: "serif", size: 2, theme: "light", ...JSON.parse(s || "{}") };

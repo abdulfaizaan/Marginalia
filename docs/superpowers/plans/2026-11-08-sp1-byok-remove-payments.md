@@ -241,7 +241,7 @@ git commit -m "SP1: flat fair-use caps (200/40/90d), plan-free hint ladder, expo
   - `marginNotes(req: MarginRequest, keyCfg: { vendor: string|null; model: string|null; base: string|null; key: string|null })`, `askAI(inp, cfg)` same second param; `visual` unchanged (offline).
   - `lib/db.ts` → `userAiConfig(userId): { vendor: string|null; model: string|null; base: string|null; key: string|null } | null` (decrypts; any failure → null).
 
-- [ ] **Step 1: Failing pins in check.ts**
+- [x] **Step 1: Failing pins in check.ts**
 
 ```ts
 // ---------- providers: BYOK routing ----------
@@ -257,9 +257,9 @@ const rc = routeFor({ vendor: "custom", base: "http://127.0.0.1:11434/v1", model
 ok(!!rc && rc.name === "custom" && rc.base === "http://127.0.0.1:11434/v1", "routeFor: custom base honored");
 ```
 
-- [ ] **Step 2: Run to fail** — `npm run check` → FAIL `routeFor: no config → offline`.
+- [x] **Step 2: Run to fail** — `npm run check` → FAIL `routeFor: no config → offline`.
 
-- [ ] **Step 3: Implement** — rewrite the routing block of `providers.ts`:
+- [x] **Step 3: Implement** — rewrite the routing block of `providers.ts`:
 
 ```ts
 const VENDOR_DEFAULTS = {
@@ -282,7 +282,7 @@ export function routeFor(cfg: { vendor?: string | null; model?: string | null; b
 
 Replace env-key logic (`real()`, `routeFor(plan)`) wholesale; `marginNotes(req, cfg)` / `askAI(inp, cfg)` dereference: `const u = await userAiConfigFor(cfg)` — they take the *decrypted raw* config object from the route (route calls `userAiConfig(user.id)` then passes `{ vendor, model, base, key }`). Where signature was `route.name` in `provider` strings, use `route?.name ?? "offline"`. The gemini branch keys off `route.name === "gemini"`; `custom` goes through the OpenAI-compatible `/chat/completions` path already present.
 
-- [ ] **Step 4: db helper in `lib/db.ts`**
+- [x] **Step 4: db helper in `lib/db.ts`**
 
 ```ts
 import { decryptSecret } from "./crypto";
@@ -297,9 +297,9 @@ export function userAiConfig(userId: string): AiKeyCfg | null {
 
 Import cycle: db → crypto (crypto imports no db — safe).
 
-- [ ] **Step 5: Route call sites** — margins route evaluate/reply: `const cfg = userAiConfig(user.id);` then `marginNotes({ blocks, changedIds, pace, dismissed, noteWords: note.words }, cfg)` and `askAI({ kind: "chat", noteText: note.text, history: [], userMessage: body, hintLevel: 1, strictness }, cfg)` (strictness from settings, no plan condition — from Task 2). Do the same where `/api/ai/ask` route and the free-standing margin reply call `askAI` (grep `askAI(` to find all).
+- [x] **Step 5: Route call sites** — margins route evaluate/reply: `const cfg = userAiConfig(user.id);` then `marginNotes({ blocks, changedIds, pace, dismissed, noteWords: note.words }, cfg)` and `askAI({ kind: "chat", noteText: note.text, history: [], userMessage: body, hintLevel: 1, strictness }, cfg)` (strictness from settings, no plan condition — from Task 2). Do the same where `/api/ai/ask` route and the free-standing margin reply call `askAI` (grep `askAI(` to find all).
 
-- [ ] **Step 6: Run green** — `npm run check && npm run build` → PASS.
+- [x] **Step 6: Run green** — `npm run check && npm run build` → PASS.
 - [ ] **Step 7: Commit** — `git commit -am "SP1: per-user BYOK provider routing (openai/xai/gemini/custom), fail-closed offline fallback"`
 
 ---
