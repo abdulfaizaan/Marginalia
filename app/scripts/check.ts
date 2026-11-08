@@ -67,6 +67,11 @@ const badCustom = validateAiKey({ vendor: "custom", key: "x", model: "m" });
 ok(badCustom.ok === false, "aikey: custom without base rejected");
 const okCustom = validateAiKey({ vendor: "custom", key: "x", model: "llama3.1", base: "http://127.0.0.1:11434/v1" });
 ok(okCustom.ok === true, "aikey: custom ok with base+model");
+// review fixes: metadata-only save (stored key kept) + link-local/cloud-metadata SSRF block
+ok(validateAiKey({ vendor: "custom", key: "", model: "llama3.1", base: "http://10.0.0.5:11434/v1" }, true).ok === true, "aikey: metadata-only save keeps stored key");
+ok(validateAiKey({ vendor: "custom", key: "", model: "llama3.1", base: "http://10.0.0.5:11434/v1" }).ok === false, "aikey: empty key without stored key rejected");
+ok(validateAiKey({ vendor: "custom", key: "x", model: "llama3.1", base: "http://169.254.169.254/latest/meta-data" }).ok === false, "aikey: cloud-metadata IP blocked");
+ok(validateAiKey({ vendor: "custom", key: "x", model: "llama3.1", base: "http://[fe80::1]:11434/v1" }).ok === false, "aikey: IPv6 link-local blocked");
 
 // ---------- visualize: pair parsing + LCS grid ----------
 const pair = parsePair("starting with ABCB against BDCB.");

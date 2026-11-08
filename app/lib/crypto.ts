@@ -13,7 +13,7 @@ export function getAppSecret(): string {
     const path = ENV_PATH();
     if (existsSync(path)) {
       const line = readFileSync(path, "utf8").split("\n").find((l) => l.startsWith("APP_SECRET="));
-      if (line) return line.slice("APP_SECRET=".length);
+      if (line) return line.slice("APP_SECRET=".length).trim(); // CRLF .env files leave \r — a different key would strand all stored blobs
     }
     const secret = randomBytes(48).toString("base64url");
     appendFileSync(path, `APP_SECRET=${secret}\n`);

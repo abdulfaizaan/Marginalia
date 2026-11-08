@@ -53,7 +53,7 @@ export default function AccountClient({ user, used, caps, hasAi }: Props) {
     setBusy(true); setMsg(null);
     try {
       await api("/api/account/ai-key", { method: "POST", body: JSON.stringify({ vendor: vendorSel, key: keyIn, model: modelIn || undefined, base: baseIn || undefined }) });
-      await loadAi("Saved. Your key is encrypted on our server — margins and Ask now run on it.");
+      await loadAi(keyIn ? "Saved. Your key is encrypted on our server — margins and Ask now run on it." : "Saved. Your stored key was kept — vendor/model updated.");
     } catch (x: unknown) {
       setMsg(x instanceof Error ? x.message : "Something went wrong.");
     } finally { setBusy(false); }
@@ -169,9 +169,12 @@ export default function AccountClient({ user, used, caps, hasAi }: Props) {
             )}
           </div>
           <div className="mt-4 flex items-center gap-2.5">
-            <button onClick={saveKey} disabled={busy || (aiSet && !keyIn)} className={btnPrimary + " !h-10"}>{aiSet ? "Replace key" : "Save key"}</button>
+            <button onClick={saveKey} disabled={busy || (!aiSet && !keyIn)} className={btnPrimary + " !h-10"}>
+              {aiSet ? (keyIn ? "Replace key" : "Save changes") : "Save key"}
+            </button>
             {aiSet && <button onClick={removeKey} disabled={busy} className={btnGhost}>Remove key</button>}
           </div>
+          {aiSet && <p className="mt-2 text-[12px] text-muted">No key handy? Save changes keeps the stored key and only updates the vendor/model.</p>}
         </Card>
 
         <Card className="p-6">
