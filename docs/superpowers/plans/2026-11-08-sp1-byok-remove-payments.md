@@ -466,7 +466,7 @@ Expected: only `app/pricing/page.tsx` itself (redirect).
 - [x] **Step 3: Users table chip** — `{u.ai_vendor ? <Chip kind="direction">{u.ai_vendor}</Chip> : <Chip kind="question">demo</Chip>}`; remove `Promo:` column/line.
 - [x] **Step 4: Overview + metrics** — `lib/admin.ts` metrics: remove promo block; add `keyed`; Overview tile: `AI keys set` with count `X of Y users`.
 - [x] **Step 5: Verify** — `grep -Rni "promo" app/app/api/admin app/components/Admin* app/lib/admin.ts` → no matches; `npm run build` PASS.
-- [ ] **Step 6: Commit** — `git commit -m "SP1: admin to Users/AI quality/Audit; keyed-vs-demo badges; promo endpoints gone"`
+- [x] **Step 6: Commit** — `git commit -m "SP1: admin to Users/AI quality/Audit; keyed-vs-demo badges; promo endpoints gone"`
 
 ---
 
@@ -474,17 +474,17 @@ Expected: only `app/pricing/page.tsx` itself (redirect).
 
 **Files:** read-only verification + `.superpowers` ledger append + any missed-grep fixes it uncovers.
 
-- [ ] **Step 1: Full forbidden-copy sweep** — `grep -RniE "LAUNCH50|Upgrade|enforcePromo|promo-codes|priceCents|cancel_plan|\"pro\"|\"plus\"" app/app app/components app/lib --include="*.ts*" | grep -v node_modules` → every hit justified or fixed (engine's legacy prose in comments is fine; seed users' `plan` strings in `lib/db.ts` remain intentionally — legacy column).
-- [ ] **Step 2: Full suite** — `npm run check` (PASS), `npm run build` (green).
-- [ ] **Step 3: Prod smoke** (stop dev server; `npm run start -- -p 3131`; curl):
+- [x] **Step 1: Full forbidden-copy sweep** — `grep -RniE "LAUNCH50|Upgrade|enforcePromo|promo-codes|priceCents|cancel_plan|\"pro\"|\"plus\"" app/app app/components app/lib --include="*.ts*" | grep -v node_modules` → every hit justified or fixed (engine's legacy prose in comments is fine; seed users' `plan` strings in `lib/db.ts` remain intentionally — legacy column).
+- [x] **Step 2: Full suite** — `npm run check` (PASS), `npm run build` (green).
+- [x] **Step 3: Prod smoke** (stop dev server; `npm run start -- -p 3131`; curl):
   - `GET /` 200, no `$` / no "LAUNCH50", nav has no Pricing
   - `POST /api/account/ai-key` (login as maya via `/api/auth`) with `{vendor:"custom", key:"o", model:"llama3.1", base:"http://127.0.0.1:11434/v1"}` → `{ok:true}`; sqlite row `ai_key_enc` non-null, first 12 bytes differ from second cookie change ( ciphertext, not plaintext prefix "o"); `GET ai-key` returns `set:true, vendor:"custom"`, never the key
   - `GET /pricing` → 307 → `/notes`
   - `GET /api/billing` → 404/405
   - margins evaluate POST on maya note → `"provider":"custom"` (with local Ollama absent → fetch fails → `"custom+offline"`) and no 500
   - `DELETE ai-key` → provider back to `"offline"`
-- [ ] **Step 4: Restart dev server** on :3000 for the user.
-- [ ] **Step 5: Ledger append** (`.superpowers/sdd/marginalia-mvp/progress.md`) + commit: `git commit -am "SP1 final sweep"` (only if stray files changed).
+- [x] **Step 4: Restart dev server** on :3000 for the user.
+- [x] **Step 5: Ledger append** (`.superpowers/sdd/marginalia-mvp/progress.md`) + commit: `git commit -am "SP1 final sweep"` (only if stray files changed).
 
 ---
 
