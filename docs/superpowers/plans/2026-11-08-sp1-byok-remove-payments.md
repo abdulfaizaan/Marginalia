@@ -300,7 +300,7 @@ Import cycle: db → crypto (crypto imports no db — safe).
 - [x] **Step 5: Route call sites** — margins route evaluate/reply: `const cfg = userAiConfig(user.id);` then `marginNotes({ blocks, changedIds, pace, dismissed, noteWords: note.words }, cfg)` and `askAI({ kind: "chat", noteText: note.text, history: [], userMessage: body, hintLevel: 1, strictness }, cfg)` (strictness from settings, no plan condition — from Task 2). Do the same where `/api/ai/ask` route and the free-standing margin reply call `askAI` (grep `askAI(` to find all).
 
 - [x] **Step 6: Run green** — `npm run check && npm run build` → PASS.
-- [ ] **Step 7: Commit** — `git commit -am "SP1: per-user BYOK provider routing (openai/xai/gemini/custom), fail-closed offline fallback"`
+- [x] **Step 7: Commit** — `git commit -am "SP1: per-user BYOK provider routing (openai/xai/gemini/custom), fail-closed offline fallback"`
 
 ---
 
@@ -321,7 +321,7 @@ Import cycle: db → crypto (crypto imports no db — safe).
   - Route: `POST /api/account/ai-key` (body = AiKeyInput) → validates, `setUserAiKey`, audit `"AI key set: <vendor>"`; `DELETE` → clears + audit; `GET` → `{ vendor, model, base, set: boolean }` (never the key).
   - `AccountClient` prop `hasAi: boolean`, `LibraryClient` prop `hasAi: boolean`.
 
-- [ ] **Step 1: Pins**
+- [x] **Step 1: Pins**
 
 ```ts
 // ---------- aikey validation ----------
@@ -336,8 +336,8 @@ const okCustom = validateAiKey({ vendor: "custom", key: "x", model: "llama3.1", 
 ok(okCustom.ok === true, "aikey: custom ok with base+model");
 ```
 
-- [ ] **Step 2: Run to fail** → FAIL `aikey: openai ok`.
-- [ ] **Step 3: Implement `lib/aikey.ts` + route** (route code: exact)
+- [x] **Step 2: Run to fail** → FAIL `aikey: openai ok`.
+- [x] **Step 3: Implement `lib/aikey.ts` + route** (route code: exact)
 
 ```ts
 // app/app/api/account/ai-key/route.ts
@@ -381,8 +381,8 @@ export async function DELETE() {
 
 (`userAiConfig` decrypts with Task 3's helper; using it here means `GET` reports `set` truthfully even if a row's ciphertext predates a secret rotation.)
 
-- [ ] **Step 4: Settings card in `AccountClient.tsx`** — vendor select (OpenAI / Grok (XAI) / Google Gemini / Custom OpenAI-compatible), key input (type=password), model + base fields shown when custom, Save → `POST`, Remove → `DELETE`, status line from `GET`. Props gain `hasAi: boolean`; page passes `hasAi={!!userAiConfig(user.id)?.key}` (import from `@/lib/db` in the *server* page, pass down).
-- [ ] **Step 5: Nudge in `LibraryClient.tsx`** (banner, once):
+- [x] **Step 4: Settings card in `AccountClient.tsx`** — vendor select (OpenAI / Grok (XAI) / Google Gemini / Custom OpenAI-compatible), key input (type=password), model + base fields shown when custom, Save → `POST`, Remove → `DELETE`, status line from `GET`. Props gain `hasAi: boolean`; page passes `hasAi={!!userAiConfig(user.id)?.key}` (import from `@/lib/db` in the *server* page, pass down).
+- [x] **Step 5: Nudge in `LibraryClient.tsx`** (banner, once):
 
 ```tsx
 // LibraryClient (component body): one-time banner state
@@ -407,7 +407,7 @@ useEffect(() => {
 
 Documentation-only notes convert to real JSX exactly as shown above. `hasAi` arrives via props (see Interfaces). Nothing here references plan fields.
 
-- [ ] **Step 6: Run green** — `npm run check` PASS; build PASS.
+- [x] **Step 6: Run green** — `npm run check` PASS; build PASS.
 - [ ] **Step 7: Commit** — `git commit -m "SP1: /api/account/ai-key (validated, audited, never-returns-key) + Settings AI card + one-time library nudge"`
 
 ---

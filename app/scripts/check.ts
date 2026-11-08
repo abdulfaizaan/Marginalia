@@ -58,6 +58,16 @@ ok(!!rx && rx.base === "https://api.x.ai/v1" && rx.model === "grok-3-mini", "rou
 const rc = routeFor({ vendor: "custom", base: "http://127.0.0.1:11434/v1", model: "llama3.1" }, "o");
 ok(!!rc && rc.name === "custom" && rc.base === "http://127.0.0.1:11434/v1", "routeFor: custom base honored");
 
+// ---------- aikey validation ----------
+const { validateAiKey } = await import("../lib/aikey.ts");
+ok(validateAiKey({ vendor: "openai", key: "sk-12345678" }).ok === true, "aikey: openai ok");
+ok(validateAiKey({ vendor: "nonsense", key: "k" }).ok === false, "aikey: unknown vendor rejected");
+ok(validateAiKey({ vendor: "gemini", key: "" }).ok === false, "aikey: empty key rejected");
+const badCustom = validateAiKey({ vendor: "custom", key: "x", model: "m" });
+ok(badCustom.ok === false, "aikey: custom without base rejected");
+const okCustom = validateAiKey({ vendor: "custom", key: "x", model: "llama3.1", base: "http://127.0.0.1:11434/v1" });
+ok(okCustom.ok === true, "aikey: custom ok with base+model");
+
 // ---------- visualize: pair parsing + LCS grid ----------
 const pair = parsePair("starting with ABCB against BDCB.");
 ok(!!pair && pair.a === "ABCB" && pair.b === "BDCB", "parsePair reads the mock selection");
