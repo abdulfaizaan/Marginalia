@@ -114,7 +114,7 @@ export default function PricingClient({ signedIn, currentPlan }: { signedIn: boo
                 </div>
               </label>
               {err && <div className="rounded-lg border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-[13.5px] font-semibold text-rose-800">{err}</div>}
-              <button onClick={pay} disabled={busy} className={btnPrimary + " w-full"}>{payLabel}</button>
+              <button onClick={pay} disabled={busy} className={btnPrimary + " w-full" + (busy ? " busy-pulse" : "")}>{payLabel}</button>
               <p className="text-[12.5px] text-muted">Cancel in two clicks from Settings. We email you before the price changes.</p>
             </div>
           </Card>

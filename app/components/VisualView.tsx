@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import AskPanel from "@/components/AskPanel";
 import { btnGhost, btnPrimary, btnMini, Chip } from "@/components/ui";
+import LinkHint from "@/components/LinkHint";
 import { api } from "@/lib/client";
 import { buildVisual, type VisualSpec } from "@/lib/visualize";
 import type { AskMsgLite, VisualLite } from "@/components/types";
@@ -66,7 +67,7 @@ export default function VisualView({ noteId, noteTitle, visuals0, ask0 }: {
     <div className="grid min-h-dvh lg:grid-cols-[minmax(0,1fr),380px]">
       <div className="flex min-w-0 flex-col border-r border-line bg-paper">
         <header className="flex h-14 shrink-0 items-center gap-3 border-b border-line px-4">
-          <Link href={`/notes/${noteId}`} className="text-[13px] font-semibold text-ink-soft hover:text-ink">← Back to note</Link>
+          <Link href={`/notes/${noteId}`} className="text-[13px] font-semibold text-ink-soft hover:text-ink">← Back to note<LinkHint /></Link>
           <span className="text-[12px] text-muted">{noteTitle}</span>
           {visuals.length > 1 && (
             <select

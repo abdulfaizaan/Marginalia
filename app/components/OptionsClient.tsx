@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api, setTheme, timeAgo } from "@/lib/client";
 import { Card, Checkbox, Chip, RadioRow, btnGhost, btnPrimary, inputCls } from "@/components/ui";
+import LinkHint from "@/components/LinkHint";
 import type { Plan } from "@/lib/plans";
 
 interface Props {
@@ -55,7 +56,7 @@ export default function OptionsClient({ noteId, plan, pro, settings, versions, r
     <div className="min-h-dvh">
       <header className="border-b border-line bg-paper">
         <div className="mx-auto flex h-16 max-w-[900px] items-center gap-4 px-5">
-          <Link href={`/notes/${noteId}`} className="text-[13.5px] font-semibold text-ink-soft hover:text-ink">← Back to note</Link>
+          <Link href={`/notes/${noteId}`} className="text-[13.5px] font-semibold text-ink-soft hover:text-ink">← Back to note<LinkHint /></Link>
         </div>
       </header>
 

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api, setTheme } from "@/lib/client";
 import { btnGhost, btnPrimary, Card, Chip, inputCls } from "@/components/ui";
+import LinkHint from "@/components/LinkHint";
 
 interface Props {
   user: { email: string; name: string; plan: "free" | "plus" | "pro"; promo: string | null; promoMonths: number; status: string };
@@ -48,7 +49,7 @@ export default function AccountClient({ user, used, caps }: Props) {
     <div className="min-h-dvh">
       <header className="border-b border-line bg-paper">
         <div className="mx-auto flex h-16 max-w-[860px] items-center justify-between px-5">
-          <Link href="/notes" className="text-[13.5px] font-semibold text-ink-soft hover:text-ink">← Library</Link>
+          <Link href="/notes" className="text-[13.5px] font-semibold text-ink-soft hover:text-ink">← Library<LinkHint /></Link>
           <div className="flex items-center gap-3">
             <button onClick={() => toggleTheme("light")} className={btnGhost + " !h-9"}>Light</button>
             <button onClick={() => toggleTheme("dark")} className={btnGhost + " !h-9"}>Dark</button>

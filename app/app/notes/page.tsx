@@ -4,11 +4,13 @@ import { connection } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { db, parseSettings, monthKey, plainRows } from "@/lib/db";
 import LibraryClient, { type LibNote } from "@/components/LibraryClient";
+import RouteFx from "@/components/RouteFx";
+import { LibrarySkeleton } from "@/components/Skeletons";
 import type { Plan } from "@/lib/plans";
 
 export default async function LibraryPage() {
   return (
-    <Suspense fallback={<div className="p-10 text-sm text-muted">Opening your notebook…</div>}>
+    <Suspense fallback={<RouteFx enter={null}><LibrarySkeleton /></RouteFx>}>
       <Library />
     </Suspense>
   );
@@ -37,11 +39,13 @@ async function Library() {
   const u = db.prepare("SELECT margin,visuals FROM usage WHERE month=? AND user_id=?").get(monthKey(), user.id) as { margin: number; visuals: number } | undefined;
   void parseSettings;
   return (
-    <LibraryClient
-      user={{ name: user.name, email: user.email, plan: (user.plan || "free") as Plan, promo: user.promo, promoMonths: user.promo_months }}
-      notebooks={notebooks}
-      notes={notes}
-      used={{ margin: u?.margin ?? 0, visuals: u?.visuals ?? 0 }}
-    />
+    <RouteFx>
+      <LibraryClient
+        user={{ name: user.name, email: user.email, plan: (user.plan || "free") as Plan, promo: user.promo, promoMonths: user.promo_months }}
+        notebooks={notebooks}
+        notes={notes}
+        used={{ margin: u?.margin ?? 0, visuals: u?.visuals ?? 0 }}
+      />
+    </RouteFx>
   );
 }

@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { Logo, btnDark, btnPrimary, btnGhost } from "@/components/ui";
+import RouteFx from "@/components/RouteFx";
+import LinkHint from "@/components/LinkHint";
 
 const FEATURES = [
   {
@@ -26,15 +28,16 @@ const PERSONAS = [
 
 export default function Landing() {
   return (
-    <main>
+    <RouteFx>
+      <main>
       <header className="sticky top-0 z-30 border-b border-line bg-paper">
         <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
           <Logo />
           <div className="flex items-center gap-5 text-[14px] font-semibold text-ink-soft">
             <a href="#features" className="hover:text-ink">Features</a>
             <a href="#who" className="hover:text-ink">Who it is for</a>
-            <Link href="/pricing" className="hover:text-ink">Pricing</Link>
-            <Link href="/sign-in" className="hover:text-ink">Sign in</Link>
+            <Link href="/pricing" className="hover:text-ink">Pricing<LinkHint /></Link>
+            <Link href="/sign-in" className="hover:text-ink">Sign in<LinkHint /></Link>
             <Link href="/sign-in?mode=signup" className={btnDark + " !px-4 !h-9 !text-[13.5px]"}>Start writing</Link>
           </div>
         </nav>
@@ -126,6 +129,7 @@ export default function Landing() {
           </div>
         </div>
       </footer>
-    </main>
+      </main>
+    </RouteFx>
   );
 }

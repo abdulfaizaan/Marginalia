@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/lib/client";
 import { btnPrimary, inputCls, Logo, Field } from "@/components/ui";
+import LinkHint from "@/components/LinkHint";
 
 export default function AuthForm() {
   const params = useSearchParams();
@@ -112,7 +113,7 @@ export default function AuthForm() {
 
           <p className="mt-6 text-center text-[13.5px] text-muted">
             Running the product?{" "}
-            <Link href="/admin/sign-in" className="font-bold text-accent hover:underline">Admin sign-in</Link>
+            <Link href="/admin/sign-in" className="font-bold text-accent hover:underline">Admin sign-in<LinkHint /></Link>
           </p>
         </div>
       </div>

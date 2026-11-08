@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import LinkHint from "@/components/LinkHint";
 import ImageExt from "@tiptap/extension-image";
 import { EditorContent, useEditor, type Editor as TEditor } from "@tiptap/react";
 import { Placeholder } from "@tiptap/extensions";
@@ -297,7 +298,7 @@ export default function Editor({ note, margins0, ask0, visuals, notebooks }: Pro
             </button>
           ) : (
             <>
-              <Link href="/notes" className="text-[13px] font-semibold text-ink-soft hover:text-ink max-lg:hidden">← Library</Link>
+              <Link href="/notes" className="text-[13px] font-semibold text-ink-soft hover:text-ink max-lg:hidden">← Library<LinkHint /></Link>
               <span className="text-[12px] text-muted max-lg:hidden">{note.notebook}</span>
             </>
           )}

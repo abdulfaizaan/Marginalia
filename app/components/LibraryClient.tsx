@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api, timeAgo } from "@/lib/client";
 import { Chip, Logo, btnGhost, btnMini, btnPrimary, inputCls, Card } from "@/components/ui";
+import LinkHint from "@/components/LinkHint";
 import { TIERS, type Plan } from "@/lib/plans";
 
 export interface LibNote {
@@ -58,7 +59,7 @@ export default function LibraryClient({ user, notebooks, notes, used }: Props) {
           </div>
           <div className="flex items-center gap-2.5">
             <Link href="/account" className={btnGhost}>Settings</Link>
-            <button onClick={newNote} disabled={busy} className={btnPrimary + " !h-10"}>New note</button>
+            <button onClick={newNote} disabled={busy} className={btnPrimary + " !h-10" + (busy ? " busy-pulse" : "")}>New note</button>
           </div>
         </div>
       </header>
@@ -127,7 +128,7 @@ export default function LibraryClient({ user, notebooks, notes, used }: Props) {
                 <div className="min-w-0">
                   <div className="text-[11.5px] font-bold tracking-[0.12em] text-muted">CONTINUE WRITING</div>
                   <div className="mt-1.5 font-serif text-[30px] font-medium text-ink">{hero.title}</div>
-                  <div className="mt-1 text-[13.5px] text-muted">{hero.notebook} · edited {timeAgo(hero.updated_at)}</div>
+                  <div className="mt-1 text-[13.5px] text-muted"><span>{hero.notebook} · edited {timeAgo(hero.updated_at)}</span><LinkHint /></div>
                   <div className="mt-3 truncate font-serif text-[15.5px] text-ink-soft">
                     {hero.private ? "Private entry — preview hidden." : hero.snippet || ""}
                   </div>

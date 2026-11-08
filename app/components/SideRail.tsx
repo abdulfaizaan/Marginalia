@@ -5,6 +5,7 @@ import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/client";
 import { btnGhost } from "@/components/ui";
+import LinkHint from "@/components/LinkHint";
 import type { NotebookLite, VisualLite } from "./types";
 
 export default function SideRail({ noteId, notebooks, visuals }: { noteId: string; notebooks: NotebookLite[]; visuals: VisualLite[] }) {
@@ -24,9 +25,9 @@ export default function SideRail({ noteId, notebooks, visuals }: { noteId: strin
 
   return (
     <aside className="flex w-[230px] shrink-0 flex-col gap-4 overflow-y-auto border-r border-line bg-paper px-4 py-5 max-lg:hidden">
-      <Link href="/notes" className="text-[13.5px] font-semibold text-ink-soft hover:text-ink">← Library</Link>
+      <Link href="/notes" className="text-[13.5px] font-semibold text-ink-soft hover:text-ink">← Library<LinkHint /></Link>
 
-      <button onClick={newNote} disabled={busy} className={btnGhost + " w-full text-[13.5px]"}>+ New note</button>
+      <button onClick={newNote} disabled={busy} className={btnGhost + " w-full text-[13.5px]" + (busy ? " busy-pulse" : "")}>+ New note</button>
 
       <div>
         <div className="mb-1.5 text-[11px] font-bold tracking-[0.14em] text-muted">NOTEBOOKS</div>

@@ -5,10 +5,12 @@ import { getSessionUser } from "@/lib/auth";
 import { db, parseSettings, plainRows } from "@/lib/db";
 import { TIERS, type Plan } from "@/lib/plans";
 import OptionsClient from "@/components/OptionsClient";
+import RouteFx from "@/components/RouteFx";
+import { OptionsSkeleton } from "@/components/Skeletons";
 
 export default async function OptionsPage({ params }: { params: Promise<{ id: string }> }) {
   return (
-    <Suspense fallback={<div className="p-10 text-sm text-muted">Loading options…</div>}>
+    <Suspense fallback={<RouteFx enter={null}><OptionsSkeleton /></RouteFx>}>
       <Options id={params} />
     </Suspense>
   );
@@ -30,13 +32,15 @@ async function Options({ id: paramsId }: { id: Promise<{ id: string }> }) {
     db.prepare("SELECT id,words,created_at FROM versions WHERE note_id=? AND created_at>? ORDER BY created_at DESC LIMIT 30").all(id, cutoff) as { id: string; words: number; created_at: number }[]
   );
   return (
-    <OptionsClient
-      noteId={id}
-      plan={plan}
-      pro={plan === "pro"}
-      settings={parseSettings(note.settings)}
-      versions={versions}
-      retentionDays={tier.versionsDays}
-    />
+    <RouteFx>
+      <OptionsClient
+        noteId={id}
+        plan={plan}
+        pro={plan === "pro"}
+        settings={parseSettings(note.settings)}
+        versions={versions}
+        retentionDays={tier.versionsDays}
+      />
+    </RouteFx>
   );
 }

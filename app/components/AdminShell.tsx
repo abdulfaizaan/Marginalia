@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Logo } from "@/components/ui";
+import LinkHint from "@/components/LinkHint";
 
 const NAV: [string, string][] = [
   ["/admin", "Overview"],
@@ -25,6 +26,7 @@ export default function AdminShell({ active, children }: { active: string; child
                 className={`block rounded-lg px-3 py-2 text-[13.5px] ${active === label ? "bg-white/10 font-bold text-white" : "hover:bg-white/5"}`}
               >
                 {label}
+                <LinkHint />
               </Link>
             ))}
           </nav>

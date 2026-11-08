@@ -3,12 +3,14 @@ import { notFound, redirect } from "next/navigation";
 import { connection } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import AdminSection from "@/components/AdminSection";
+import RouteFx from "@/components/RouteFx";
+import { AdminSkeleton } from "@/components/Skeletons";
 
 const SECTIONS = ["users", "promo-codes", "ai-quality", "audit-log"];
 
 export default async function AdminSectionPage({ params }: { params: Promise<{ section: string }> }) {
   return (
-    <Suspense fallback={<div className="min-h-dvh p-10 text-sm text-white/60" style={{ background: "#0e1524" }}>Loading…</div>}>
+    <Suspense fallback={<RouteFx enter={null}><AdminSkeleton /></RouteFx>}>
       <Gate section={params} />
     </Suspense>
   );
@@ -20,5 +22,5 @@ async function Gate({ section: paramsSection }: { section: Promise<{ section: st
   if (!SECTIONS.includes(section)) notFound();
   const user = await getSessionUser();
   if (!user || user.role !== "admin") redirect("/admin/sign-in");
-  return <AdminSection section={section} />;
+  return <RouteFx><AdminSection section={section} /></RouteFx>;
 }

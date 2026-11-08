@@ -4,11 +4,13 @@ import { connection } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { db, parseSettings, plainRows } from "@/lib/db";
 import Editor, { type EditorSettings } from "@/components/Editor";
+import RouteFx from "@/components/RouteFx";
+import { NoteSkeleton } from "@/components/Skeletons";
 import type { Doc } from "@/lib/exporters";
 
 export default async function NotePage({ params }: { params: Promise<{ id: string }> }) {
   return (
-    <Suspense fallback={<div className="p-10 text-sm text-muted">Opening note…</div>}>
+    <Suspense fallback={<RouteFx enter={null}><NoteSkeleton /></RouteFx>}>
       <Note id={params} />
     </Suspense>
   );
@@ -33,27 +35,29 @@ async function Note({ id: paramsId }: { id: Promise<{ id: string }> }) {
   void parseSettings;
   const s = parseSettings(note.settings);
   return (
-    <Editor
-      note={{
-        id: note.id,
-        title: note.title,
-        mode: note.mode,
-        private: !!note.private,
-        notebook: nb?.name || "Notebook",
-        doc: JSON.parse(note.content_json) as Doc,
-        settings: {
-          pace: s.pace as EditorSettings["pace"],
-          strictness: s.strictness,
-          margins: s.margins as EditorSettings["margins"],
-          focus: !!s.focus,
-          font: s.font,
-          size: s.size,
-        },
-      }}
-      margins0={margins as never}
-      ask0={ask as never}
-      visuals={visuals}
-      notebooks={notebooks as never}
-    />
+    <RouteFx>
+      <Editor
+        note={{
+          id: note.id,
+          title: note.title,
+          mode: note.mode,
+          private: !!note.private,
+          notebook: nb?.name || "Notebook",
+          doc: JSON.parse(note.content_json) as Doc,
+          settings: {
+            pace: s.pace as EditorSettings["pace"],
+            strictness: s.strictness,
+            margins: s.margins as EditorSettings["margins"],
+            focus: !!s.focus,
+            font: s.font,
+            size: s.size,
+          },
+        }}
+        margins0={margins as never}
+        ask0={ask as never}
+        visuals={visuals}
+        notebooks={notebooks as never}
+      />
+    </RouteFx>
   );
 }

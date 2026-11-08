@@ -71,3 +71,73 @@ body { background: var(--paper); color: var(--ink); font-family: var(--font-sans
 ::selection { background: color-mix(in srgb, var(--accent) 20%, transparent); }
 
 @media print { .no-print { display: none !important; } }
+
+/* ── Route transitions (React <ViewTransition>, class "route") ─────────────
+   Old content leaves fast (fade + slight downward drift); new arrives gently
+   from below. Trigger: route navigations and Suspense reveals only. */
+:root { --fx-exit: 150ms; --fx-enter: 210ms; --fx-move: 420ms; }
+
+::view-transition-old(.route) {
+  animation:
+    var(--fx-exit) ease-in both mg-fade reverse,
+    var(--fx-exit) ease-out both mg-drift reverse;
+}
+::view-transition-new(.route) {
+  animation:
+    var(--fx-enter) ease-out var(--fx-exit) both mg-fade,
+    var(--fx-move) ease-in-out both mg-slide-up;
+}
+@keyframes mg-fade { from { filter: blur(3px); opacity: 0; } to { filter: blur(0); opacity: 1; } }
+@keyframes mg-drift { from { transform: translateY(8px); } to { transform: none; } }
+@keyframes mg-slide-up { from { transform: translateY(14px); } to { transform: none; } }
+
+/* The overlay must not trap clicks mid-transition */
+::view-transition { pointer-events: none; }
+
+/* ── Inline pending indicator inside <Link> (useLinkStatus), debounced 250ms ── */
+.link-hint {
+  display: inline-block;
+  width: 0.6em;
+  height: 0.6em;
+  margin-left: 0.25rem;
+  border-radius: 9999px;
+  background: currentColor;
+  opacity: 0;
+  visibility: hidden; /* reserve space without showing the hint */
+}
+.link-hint.is-pending {
+  visibility: visible;
+  animation-name: mg-hint-fade, mg-hint-pulse;
+  animation-duration: 200ms, 1s;
+  animation-delay: 250ms, 250ms;
+  animation-timing-function: ease, ease-in-out;
+  animation-iteration-count: 1, infinite;
+  animation-fill-mode: forwards, none;
+}
+@keyframes mg-hint-fade { to { opacity: 0.35; } }
+@keyframes mg-hint-pulse { 50% { opacity: 0.15; } }
+
+/* ── Skeleton primitives (see components/Skeletons.tsx) ── */
+.mg-skel {
+  background: var(--line);
+  border-radius: 6px;
+  animation: mg-skel-pulse 1.5s ease-in-out infinite;
+}
+.mg-skel--dark { background: rgba(255, 255, 255, 0.13); }
+@keyframes mg-skel-pulse { 50% { opacity: 0.55; } }
+
+/* ── Busy buttons (applied where a busy flag already exists) ── */
+.busy-pulse { animation: mg-busy 1s ease-in-out infinite; }
+@keyframes mg-busy { 50% { opacity: 0.6; } }
+
+/* ── Reduced motion: swap instantly, stop all pulsing ── */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+  .mg-skel, .busy-pulse { animation: none !important; }
+  .link-hint.is-pending { animation: none !important; opacity: 0.35; }
+}

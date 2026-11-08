@@ -6,10 +6,12 @@ import { db, monthKey, parseSettings, plainRows } from "@/lib/db";
 import { TIERS, type Plan } from "@/lib/plans";
 import { usageGet } from "@/lib/admin";
 import AccountClient from "@/components/AccountClient";
+import RouteFx from "@/components/RouteFx";
+import { AccountSkeleton } from "@/components/Skeletons";
 
 export default async function AccountPage() {
   return (
-    <Suspense fallback={<div className="p-10 text-sm text-muted">Loading account…</div>}>
+    <Suspense fallback={<RouteFx enter={null}><AccountSkeleton /></RouteFx>}>
       <Account />
     </Suspense>
   );
@@ -28,10 +30,12 @@ async function Account() {
   void monthKey;
   void parseSettings;
   return (
-    <AccountClient
-      user={{ email: row?.email || user.email, name: user.name, plan, promo: row?.promo || null, promoMonths: user.promo_months || 0, status: row?.status || "active" }}
-      used={used}
-      caps={{ margin: tier.notesMonth, visuals: tier.visualsMonth }}
-    />
+    <RouteFx>
+      <AccountClient
+        user={{ email: row?.email || user.email, name: user.name, plan, promo: row?.promo || null, promoMonths: user.promo_months || 0, status: row?.status || "active" }}
+        used={used}
+        caps={{ margin: tier.notesMonth, visuals: tier.visualsMonth }}
+      />
+    </RouteFx>
   );
 }
