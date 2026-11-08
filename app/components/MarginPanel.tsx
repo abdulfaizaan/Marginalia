@@ -102,7 +102,7 @@ export default function MarginPanel({ noteId, margins, setMargins, replyTo, setR
 
       {capped && (
         <div className="mx-5 mt-3 rounded-xl border border-amber-300 bg-amber-50 px-3.5 py-2.5 text-[12.5px] font-semibold text-amber-800">
-          {capped} <Link href="/pricing" className="underline">See plans</Link>
+          {capped} <Link href="/account" className="underline">Set your own AI key</Link>
         </div>
       )}
 
@@ -118,7 +118,7 @@ export default function MarginPanel({ noteId, margins, setMargins, replyTo, setR
       </div>
 
       <div className="px-5 pb-5">
-        {sendErr && <div className="mb-1.5 text-[12px] font-semibold text-amber-700">{sendErr} <Link href="/pricing" className="underline">See plans</Link></div>}
+        {sendErr && <div className="mb-1.5 text-[12px] font-semibold text-amber-700">{sendErr} <Link href="/account" className="underline">Set your own AI key</Link></div>}
         {replyTo && (
           <div className="mb-1.5 text-[12px] text-accent">
             Replying to note {visible.find((m) => m.id === replyTo)?.num ?? ""} ·{" "}

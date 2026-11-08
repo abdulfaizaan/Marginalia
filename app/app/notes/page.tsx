@@ -6,7 +6,6 @@ import { db, parseSettings, monthKey, plainRows, userAiConfig } from "@/lib/db";
 import LibraryClient, { type LibNote } from "@/components/LibraryClient";
 import RouteFx from "@/components/RouteFx";
 import { LibrarySkeleton } from "@/components/Skeletons";
-import type { Plan } from "@/lib/plans";
 
 export default async function LibraryPage() {
   return (
@@ -41,7 +40,7 @@ async function Library() {
   return (
     <RouteFx>
       <LibraryClient
-        user={{ name: user.name, email: user.email, plan: (user.plan || "free") as Plan, promo: user.promo, promoMonths: user.promo_months }}
+        user={{ name: user.name, email: user.email }}
         hasAi={!!userAiConfig(user.id)?.key}
         notebooks={notebooks}
         notes={notes}

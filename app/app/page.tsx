@@ -36,7 +36,6 @@ export default function Landing() {
           <div className="flex items-center gap-5 text-[14px] font-semibold text-ink-soft">
             <a href="#features" className="hover:text-ink">Features</a>
             <a href="#who" className="hover:text-ink">Who it is for</a>
-            <Link href="/pricing" className="hover:text-ink">Pricing<LinkHint /></Link>
             <Link href="/sign-in" className="hover:text-ink">Sign in<LinkHint /></Link>
             <Link href="/sign-in?mode=signup" className={btnDark + " !px-4 !h-9 !text-[13.5px]"}>Start writing</Link>
           </div>
@@ -45,7 +44,7 @@ export default function Landing() {
 
       <section className="mx-auto max-w-6xl px-5 pb-16 pt-16">
         <span className="mb-6 inline-flex items-center rounded-full bg-[var(--chip-dir-bg)] px-3 py-1 text-[12px] font-bold text-[var(--chip-dir-ink)]">
-          Launch offer: LAUNCH50 for the first 100 users
+          Free. Bring your own AI key.
         </span>
         <div className="grid items-center gap-12 lg:grid-cols-[1.15fr,0.85fr]">
           <div>
@@ -57,7 +56,7 @@ export default function Landing() {
             </p>
             <div className="mt-7 flex gap-3">
               <Link href="/sign-in?mode=signup" className={btnPrimary}>Start writing free</Link>
-              <Link href="/pricing" className={btnGhost}>See pricing</Link>
+              <a href="#features" className={btnGhost}>See how it works</a>
             </div>
           </div>
 
@@ -109,12 +108,12 @@ export default function Landing() {
         <div className="mt-14 flex flex-col justify-between gap-6 rounded-[22px] bg-[var(--btn-dark)] px-8 py-9 md:flex-row md:items-center">
           <div>
             <div className="font-serif text-[30px] font-medium leading-tight text-[var(--btn-dark-text,#f4f6fb)]" style={{ color: "#f4f6fb" }}>
-              Plus from $9.99 a month. Pro from $19.99.
+              Marginalia is free. Bring your own AI key — or use demo margins.
             </div>
-            <div className="mt-2 text-[14px] text-white/70">Use code LAUNCH50 for 50% off, $4.99 a month for 3 months, for the first 100 users.</div>
+            <div className="mt-2 text-[14px] text-white/70">Your key, your bill, your privacy. Where is the catch? There isn't one.</div>
           </div>
-          <Link href="/pricing" className={btnGhost + " !border-0 bg-white text-ink"}>
-            Compare plans
+          <Link href="/sign-in?mode=signup" className={btnGhost + " !border-0 bg-white text-ink"}>
+            Start writing free
           </Link>
         </div>
       </section>

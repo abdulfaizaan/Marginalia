@@ -6,14 +6,14 @@ import { useRouter } from "next/navigation";
 import { api, timeAgo } from "@/lib/client";
 import { Chip, Logo, btnGhost, btnMini, btnPrimary, inputCls, Card } from "@/components/ui";
 import LinkHint from "@/components/LinkHint";
-import { CAPS, type Plan } from "@/lib/plans";
+import { CAPS } from "@/lib/plans";
 
 export interface LibNote {
   id: string; title: string; updated_at: number; words: number; private: number; mode: string; snippet: string | null;
   notebook_id: string; notebook: string; error: number; question: number; direction: number; pinned: boolean;
 }
 interface Props {
-  user: { name: string; email: string; plan: Plan; promo: string | null; promoMonths: number };
+  user: { name: string; email: string };
   notebooks: { id: string; name: string; is_journal: number }[];
   notes: LibNote[];
   used: { margin: number; visuals: number };
@@ -34,7 +34,7 @@ export default function LibraryClient({ user, notebooks, notes, used, hasAi }: P
     try { if (!localStorage.getItem("mg-nudge-key") && !hasAi) setNudge(true); } catch { /* private mode */ }
   }, [hasAi]);
 
-  // SP1: single tier — the card's plan copy/Upgrade button are removed in the payments sweep (Task 5)
+  // SP1: single fair-use tier (caps live in CAPS)
   const tier = { label: "Free", notesMonth: CAPS.notesMonth };
   const filtered = useMemo(() => {
     let list = notes;
@@ -116,16 +116,14 @@ export default function LibraryClient({ user, notebooks, notes, used, hasAi }: P
 
           <Card className="mt-10 p-4">
             <div className="flex items-baseline justify-between">
-              <span className="text-[14px] font-bold text-ink">{tier.label} plan</span>
-              <span className="text-[12.5px] font-semibold text-muted">AI notes</span>
+              <span className="text-[14px] font-bold text-ink">AI notes</span>
+              <span className="text-[12.5px] font-semibold text-muted">this month</span>
             </div>
             <div className="mt-2.5 h-[7px] overflow-hidden rounded-full bg-line">
               <div className="h-full rounded-full bg-accent" style={{ width: `${Math.min(100, (used.margin / tier.notesMonth) * 100)}%` }} />
             </div>
-            <div className="mt-2 text-[12.5px] text-ink-soft">{used.margin} of {tier.notesMonth} used this month</div>
-            {user.plan !== "pro" && (
-              <Link href="/pricing" className={btnGhost + " mt-3 w-full text-accent"}>Upgrade</Link>
-            )}
+            <div className="mt-2 text-[12.5px] text-ink-soft">{used.margin} of {tier.notesMonth} used</div>
+            <Link href="/account" className={btnGhost + " mt-3 w-full text-accent"}>Your AI key</Link>
           </Card>
         </aside>
 

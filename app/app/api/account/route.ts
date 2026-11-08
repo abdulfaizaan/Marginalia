@@ -19,11 +19,11 @@ export async function GET() {
   });
 }
 
-// POST {action:'cancel_plan'|'delete_request'|'delete_sure'}
+// POST {action:'theme'|'delete_request'|'delete_sure'}
 export async function POST(req: Request) {
   const user = await getSessionUser();
   if (!user) return jsonError(401, "Sign in first.");
-  const b = await req.json() as { action: "theme" | "cancel_plan" | "delete_request" | "delete_sure"; theme?: string };
+  const b = await req.json() as { action: "theme" | "delete_request" | "delete_sure"; theme?: string };
   if (b.action === "theme") {
     const raw = user.settings || "{}";
     let cur: Record<string, unknown> = {};
@@ -31,10 +31,6 @@ export async function POST(req: Request) {
     cur.theme = b.theme === "dark" ? "dark" : b.theme === "system" ? "system" : "light";
     db.prepare("UPDATE users SET settings=? WHERE id=?").run(JSON.stringify(cur), user.id);
     return Response.json({ ok: true, theme: cur.theme });
-  }
-  if (b.action === "cancel_plan") {
-    db.prepare("UPDATE users SET plan='free', promo_months=0 WHERE id=?").run(user.id);
-    return Response.json({ ok: true, plan: "free" });
   }
   if (b.action === "delete_request") {
     db.prepare("UPDATE users SET status='deletion_requested' WHERE id=?").run(user.id);

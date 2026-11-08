@@ -8,7 +8,7 @@ import { btnGhost, btnPrimary, Card, Chip, inputCls } from "@/components/ui";
 import LinkHint from "@/components/LinkHint";
 
 interface Props {
-  user: { email: string; name: string; plan: "free" | "plus" | "pro"; promo: string | null; promoMonths: number; status: string };
+  user: { email: string; name: string; status: string };
   used: { margin: number; visuals: number };
   caps: { margin: number; visuals: number };
   hasAi: boolean;
@@ -23,7 +23,6 @@ const VENDORS = [
 
 export default function AccountClient({ user, used, caps, hasAi }: Props) {
   const router = useRouter();
-  const [confirmCancel, setConfirmCancel] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [wipe, setWipe] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -120,34 +119,15 @@ export default function AccountClient({ user, used, caps, hasAi }: Props) {
         )}
 
         <Card className="p-6">
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="flex items-center gap-2.5">
-                <h2 className="font-serif text-[26px] font-medium text-ink">{user.plan === "free" ? "Free plan" : user.plan === "plus" ? "Plus plan" : "Pro plan"}</h2>
-                {user.promo && <Chip kind="direction" small>{user.promo}{user.promoMonths ? ` · ${user.promoMonths} mo` : ""}</Chip>}
-              </div>
-              <p className="mt-1.5 text-[13.5px] text-ink-soft">
-                This month: {used.margin}/{caps.margin} margin notes · {used.visuals}/{caps.visuals} visualizations.
-              </p>
+          <div>
+            <div className="flex items-center gap-2.5">
+              <h2 className="font-serif text-[26px] font-medium text-ink">Plan</h2>
+              <Chip kind="direction" small>free forever</Chip>
             </div>
-            {user.plan !== "pro" && (
-              <Link href="/pricing" className={btnPrimary + " !h-10"}>{user.plan === "free" ? "Upgrade" : "Switch to Pro"}</Link>
-            )}
+            <p className="mt-1.5 text-[13.5px] text-ink-soft">
+              This month: {used.margin}/{caps.margin} margin notes · {used.visuals}/{caps.visuals} visualizations — generous fair-use limits for everyone.
+            </p>
           </div>
-          {user.plan !== "free" && (
-            <div className="mt-5 border-t border-line pt-4">
-              {confirmCancel ? (
-                <div className="flex items-center gap-3">
-                  <span className="text-[13.5px] font-semibold text-ink">Keep downgrading to Free?</span>
-                  <button onClick={() => post("cancel_plan")} disabled={busy} className={btnGhost}>Yes, cancel plan</button>
-                  <button onClick={() => setConfirmCancel(false)} className={btnGhost}>No</button>
-                </div>
-              ) : (
-                <button onClick={() => setConfirmCancel(true)} className={btnGhost}>Cancel plan</button>
-              )}
-              <p className="mt-2 text-[12px] text-muted">Two clicks — allowed any time, effective immediately, we never charge again.</p>
-            </div>
-          )}
         </Card>
 
         {msg && <div className="rounded-lg bg-emerald-50 px-4 py-2.5 text-[13px] font-semibold text-emerald-800">{msg}</div>}

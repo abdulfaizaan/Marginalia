@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { db, parseSettings, plainRows } from "@/lib/db";
-import { CAPS, type Plan } from "@/lib/plans";
+import { CAPS } from "@/lib/plans";
 import OptionsClient from "@/components/OptionsClient";
 import RouteFx from "@/components/RouteFx";
 import { OptionsSkeleton } from "@/components/Skeletons";
@@ -21,7 +21,6 @@ async function Options({ id: paramsId }: { id: Promise<{ id: string }> }) {
   const { id } = await paramsId;
   const user = await getSessionUser();
   if (!user) redirect(`/sign-in?next=/notes/${id}/options`);
-  const plan = (user.plan || "free") as Plan;
   const note = db.prepare("SELECT id,settings FROM notes WHERE id=? AND user_id=?").get(id, user.id) as
     | { id: string; settings: string }
     | undefined;
@@ -34,8 +33,6 @@ async function Options({ id: paramsId }: { id: Promise<{ id: string }> }) {
     <RouteFx>
       <OptionsClient
         noteId={id}
-        plan={plan}
-        pro={plan === "pro"}
         settings={parseSettings(note.settings)}
         versions={versions}
         retentionDays={CAPS.versionsDays}

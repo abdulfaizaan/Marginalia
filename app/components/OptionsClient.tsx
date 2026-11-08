@@ -4,19 +4,16 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api, setTheme, timeAgo } from "@/lib/client";
-import { Card, Checkbox, Chip, RadioRow, btnGhost, btnPrimary, inputCls } from "@/components/ui";
+import { Card, Checkbox, RadioRow, btnGhost, btnPrimary, inputCls } from "@/components/ui";
 import LinkHint from "@/components/LinkHint";
-import type { Plan } from "@/lib/plans";
 interface Props {
   noteId: string;
-  plan: Plan;
-  pro: boolean;
   settings: { pace: string; strictness: string; margins: string; focus: boolean; font: string; size: number; theme: string };
   versions: { id: string; words: number; created_at: number }[];
   retentionDays: number;
 }
 
-export default function OptionsClient({ noteId, plan, pro, settings, versions, retentionDays }: Props) {
+export default function OptionsClient({ noteId, settings, versions, retentionDays }: Props) {
   const router = useRouter();
   const [pace, setPace] = useState(settings.pace);
   const [strictness, setStrictness] = useState(settings.strictness);
@@ -86,8 +83,6 @@ export default function OptionsClient({ noteId, plan, pro, settings, versions, r
                   title={t}
                   sub={s}
                   checked={strictness === v}
-                  pro={v === "direct" && !pro}
-                  disabled={v === "direct" && plan !== "pro"}
                   onChange={() => { setStrictness(v); save({ strictness: v }); }}
                 />
               ))}
@@ -141,14 +136,13 @@ export default function OptionsClient({ noteId, plan, pro, settings, versions, r
         <Card className="mt-6 p-5">
           <div className="flex items-baseline justify-between">
             <h2 className="font-serif text-[24px] font-medium text-ink">Export</h2>
-            {plan === "free" && <Chip kind="direction" small>Word + Markdown need Plus</Chip>}
           </div>
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
             <div className="space-y-3">
               {([
                 ["md", "Markdown", ".md — keeps your voice, drops formatting"],
                 ["word", "Word", ".doc — opens in Word and Google Docs"],
-                ["pdf", "PDF", "browser print dialog — works on every plan"],
+                ["pdf", "PDF", "browser print dialog"],
               ] as const).map(([v, t, s]) => (
                 <RadioRow key={v} title={t} sub={s} checked={fmt === v} onChange={() => setFmt(v)} />
               ))}
@@ -156,19 +150,15 @@ export default function OptionsClient({ noteId, plan, pro, settings, versions, r
             <div className="space-y-4">
               <Checkbox
                 on={hideAi}
-                onChange={(v) => { if (plan === "free") return; setHideAi(v); }}
+                onChange={(v) => setHideAi(v)}
                 label="Hide AI writing"
-                sub={plan === "free" ? "AI text in exports is a Plus/Pro option" : "AI lines stay out of the exported file."}
+                sub="AI lines stay out of the exported file."
               />
               <Checkbox on={foot} onChange={setFoot} label="Attach margin notes as footnotes" />
               {fmt === "pdf" ? (
                 <a href={exportHref} target="_blank" rel="noreferrer" className={btnPrimary + " w-full"}>
                   Open PDF (print dialog)
                 </a>
-              ) : plan === "free" ? (
-                <span className={btnPrimary + " w-full cursor-not-allowed opacity-50"} title="Word and Markdown export need Plus.">
-                  Download .{fmt === "md" ? "md" : "doc"}
-                </span>
               ) : (
                 <a href={exportHref} className={btnPrimary + " w-full"}>
                   Download .{fmt === "md" ? "md" : "doc"}
@@ -182,7 +172,7 @@ export default function OptionsClient({ noteId, plan, pro, settings, versions, r
         <Card className="mt-6 p-5">
           <h2 className="font-serif text-[24px] font-medium text-ink">Version history</h2>
           <p className="mt-1 text-[13px] text-muted">
-            {retentionDays === 0 ? "Pro keeps everything." : `Your plan keeps ${retentionDays} days of history.`}
+            {retentionDays ? `History is kept for ${retentionDays} days.` : "Versions are kept forever."}
           </p>
           <div className="mt-4 divide-y divide-line">
             {versions.map((v) => (

@@ -408,7 +408,7 @@ useEffect(() => {
 Documentation-only notes convert to real JSX exactly as shown above. `hasAi` arrives via props (see Interfaces). Nothing here references plan fields.
 
 - [x] **Step 6: Run green** — `npm run check` PASS; build PASS.
-- [ ] **Step 7: Commit** — `git commit -m "SP1: /api/account/ai-key (validated, audited, never-returns-key) + Settings AI card + one-time library nudge"`
+- [x] **Step 7: Commit** — `git commit -m "SP1: /api/account/ai-key (validated, audited, never-returns-key) + Settings AI card + one-time library nudge"`
 
 ---
 
@@ -427,8 +427,8 @@ Documentation-only notes convert to real JSX exactly as shown above. `hasAi` arr
 
 **Interfaces:** Consumes Task 2 `CAPS`. Produces: none (pure removal); AccountClient keeps `delete_request`/`delete_sure`/theme only.
 
-- [ ] **Step 1: Delete files** (`git rm app/app/api/billing/route.ts app/components/PricingClient.tsx`)
-- [ ] **Step 2: Pricing page → redirect**
+- [x] **Step 1: Delete files** (`git rm app/app/api/billing/route.ts app/components/PricingClient.tsx`)
+- [x] **Step 2: Pricing page → redirect**
 
 ```tsx
 import { redirect } from "next/navigation";
@@ -437,13 +437,13 @@ export default function PricingRedirect() {
 }
 ```
 
-- [ ] **Step 3: Landing copy surgery** — remove: Pricing nav `<Link>`, `See pricing` CTA pair→ single `Start writing free`, the `LAUNCH50` chip block (lines ~44–46), dark price strip's first two text lines → replace strip content with `<div className="font-serif text-[30px] text-[#f4f6fb]">Marginalia is free. Bring your own AI key — or use demo margins.</div>` + subline `Your key, your bill, your privacy. Where's the catch? There isn't one.`; keep dark strip CTA linking `/sign-in?mode=signup`.
-- [ ] **Step 4: Grep-forbidden copy after edits**
+- [x] **Step 3: Landing copy surgery** — remove: Pricing nav `<Link>`, `See pricing` CTA pair→ single `Start writing free`, the `LAUNCH50` chip block (lines ~44–46), dark price strip's first two text lines → replace strip content with `<div className="font-serif text-[30px] text-[#f4f6fb]">Marginalia is free. Bring your own AI key — or use demo margins.</div>` + subline `Your key, your bill, your privacy. Where's the catch? There isn't one.`; keep dark strip CTA linking `/sign-in?mode=signup`.
+- [x] **Step 4: Grep-forbidden copy after edits**
 
 Run: `grep -RniE "LAUNCH50|Upgrade|/pricing|priceCents|Plus plan|Pro plan|cancel_plan" app/app app/components --include="*.tsx" --include="*.ts"`
 Expected: only `app/pricing/page.tsx` itself (redirect).
 
-- [ ] **Step 5: Verify build + green check** — `npm run check && npm run build` → PASS.
+- [x] **Step 5: Verify build + green check** — `npm run check && npm run build` → PASS.
 - [ ] **Step 6: Commit** — `git commit -m "SP1: payments/promo/pricing surfaces removed; free copy everywhere"`
 
 ---

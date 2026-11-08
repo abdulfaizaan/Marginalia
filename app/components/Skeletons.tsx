@@ -156,36 +156,6 @@ export function AccountSkeleton() {
   );
 }
 
-export function PricingSkeleton() {
-  return (
-    <div className="min-h-dvh">
-      <header className="border-b border-line bg-paper">
-        <div className="mx-auto flex h-16 max-w-[1100px] items-center justify-between px-5">
-          <div className="mg-skel h-6 w-36" />
-          <div className="mg-skel h-9 w-36" />
-        </div>
-      </header>
-      <main className="mx-auto max-w-[1100px] px-5 pb-16">
-        <div className="mg-skel mt-10 h-11 w-80" />
-        <div className="mg-skel mt-3 h-4 w-full max-w-[62ch]" />
-        <div className="mt-8 grid gap-5 md:grid-cols-3">
-          {([0, 1, 2] as const).map((i) => (
-            <div key={i} className="rounded-2xl border border-line bg-card p-6">
-              <div className="space-y-2">
-                <Bars widths={["w-20 h-4", "w-32 h-9", "w-full h-3", "w-4/5 h-3", "w-full h-10"]} />
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="mt-9 grid gap-6 lg:grid-cols-[1.5fr,1fr]">
-          <div className="mg-skel h-44 rounded-2xl" />
-          <div className="mg-skel h-44 rounded-2xl" />
-        </div>
-      </main>
-    </div>
-  );
-}
-
 export function AuthSkeleton() {
   return (
     <div className="grid min-h-dvh lg:grid-cols-2">
