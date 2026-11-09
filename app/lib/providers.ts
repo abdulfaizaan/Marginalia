@@ -96,6 +96,10 @@ export function journalAI(entry: string, userMessage?: string): JournalResp & { 
 }
 
 // ---------- provider chat ----------
+// 25s cap: a hung/queued provider call must not pin the request for minutes —
+// a timeout throws and every call site falls back to the offline engine (fail closed).
+// ponytail: ceiling = 25s; PRD wants margins in ~4s p95, free-tier congestion can queue longer — upgrade path: retry queue.
+const CHAT_TIMEOUT_MS = 25_000;
 async function chat(route: { name: string; base: string; key: string; model: string }, sys: string, user: string): Promise<string> {
   if (route.name === "gemini") {
     const res = await fetch(`${route.base}/models/${route.model}:generateContent?key=${route.key}`, {
@@ -105,6 +109,7 @@ async function chat(route: { name: string; base: string; key: string; model: str
         contents: [{ role: "user", parts: [{ text: user }] }],
         generationConfig: { temperature: 0.4, response_mime_type: "application/json" },
       }),
+      signal: AbortSignal.timeout(CHAT_TIMEOUT_MS),
     });
     if (!res.ok) throw new Error("gemini " + res.status);
     const j = await res.json();
@@ -117,6 +122,7 @@ async function chat(route: { name: string; base: string; key: string; model: str
       messages: [{ role: "system", content: sys }, { role: "user", content: user }],
       response_format: { type: "json_object" },
     }),
+    signal: AbortSignal.timeout(CHAT_TIMEOUT_MS),
   });
   if (!res.ok) throw new Error(route.name + " " + res.status);
   const j = await res.json();

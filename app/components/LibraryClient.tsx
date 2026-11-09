@@ -74,7 +74,7 @@ export default function LibraryClient({ user, notebooks, notes, used }: Props) {
             <button
               key={k}
               onClick={() => setLib(k)}
-              className={`mt-1 block w-full rounded-lg px-3 py-2 text-left text-[14.5px] ${lib === k ? "bg-[#e2e7ee] font-bold text-ink" : "text-ink-soft hover:bg-paper-soft"}`}
+              className={`mt-1 block w-full rounded-lg px-3 py-2 text-left text-[14.5px] ${lib === k ? "bg-line font-bold text-ink" : "text-ink-soft hover:bg-paper-soft"}`}
             >
               {label}
             </button>
@@ -85,7 +85,7 @@ export default function LibraryClient({ user, notebooks, notes, used }: Props) {
               key={nb.id}
               onClick={() => setNbFilter(nbFilter === nb.id ? null : nb.id)}
               className={`flex w-full items-baseline justify-between rounded-lg px-3 py-2 text-left text-[14.5px] ${
-                nbFilter === nb.id ? "bg-[#e2e7ee] font-bold text-ink" : "text-ink-soft hover:bg-paper-soft"
+                nbFilter === nb.id ? "bg-line font-bold text-ink" : "text-ink-soft hover:bg-paper-soft"
               }`}
             >
               <span>{nb.name}</span>
@@ -112,7 +112,7 @@ export default function LibraryClient({ user, notebooks, notes, used }: Props) {
               <h1 className="font-serif text-[42px] font-medium leading-tight text-ink">Your notes</h1>
               <p className="mt-1 text-[14.5px] text-ink-soft">Pick up where your thinking left off.</p>
             </div>
-            <div className="flex rounded-xl bg-[#e4e8ef] p-1">
+            <div className="flex rounded-xl bg-line p-1">
               {(["recent", "az"] as const).map((k) => (
                 <button key={k} onClick={() => setSort(k)} className={`h-9 rounded-[8px] px-4 text-[13.5px] font-bold ${sort === k ? "bg-card text-ink shadow-sm" : "text-ink-soft"}`}>
                   {k === "recent" ? "Recent" : "A to Z"}

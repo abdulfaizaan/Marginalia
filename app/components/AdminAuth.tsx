@@ -25,10 +25,10 @@ export default function AdminAuth() {
   }
 
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-center bg-[#0d1521] p-6" style={{ background: "#0d1521" }}>
+    <main className="flex min-h-dvh flex-col items-center justify-center bg-[#111111] p-6" style={{ background: "#111111" }}>
       <div className="mb-8 flex items-center gap-2.5">
         <Logo dark />
-        <span className="rounded-md bg-[#33415f] px-2 py-[3px] text-[10.5px] font-black tracking-[0.12em] text-[#9db3f0]">ADMIN</span>
+        <span className="rounded-md bg-[#2a2a2a] px-2 py-[3px] text-[10.5px] font-black tracking-[0.12em] text-[#f3eee3]">ADMIN</span>
       </div>
       <form onSubmit={go} className="w-full max-w-[520px] rounded-3xl border border-white/10 bg-white/[0.06] p-8 backdrop-blur">
         <h1 className="font-serif text-[32px] font-medium text-white">Admin console</h1>
@@ -52,7 +52,7 @@ export default function AdminAuth() {
         <p className="mt-1.5 text-[12.5px] text-white/55">From your authenticator app. Demo code: 123456.</p>
 
         {err && <div className="mt-4 rounded-lg border border-rose-400/30 bg-rose-500/10 px-3.5 py-2.5 text-[13.5px] font-semibold text-rose-200">{err}</div>}
-        <button type="submit" disabled={busy} className="mt-6 w-full rounded-xl bg-white py-3 text-[15px] font-bold text-[#0d1521] hover:bg-white/90 disabled:opacity-60">
+        <button type="submit" disabled={busy} className="mt-6 w-full rounded-xl bg-white py-3 text-[15px] font-bold text-[#111111] hover:bg-white/90 disabled:opacity-60">
           Sign in to admin
         </button>
         <div className="mt-5 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3.5 text-[13px] leading-relaxed text-white/70">

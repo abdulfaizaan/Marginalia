@@ -312,7 +312,7 @@ export default function Editor({ note, margins0, ask0, visuals, notebooks }: Pro
             }}
           />
           {mode !== "think" && <span className="text-[12px] text-muted max-lg:hidden">{mode === "ask" ? "Ask" : ""}</span>}
-          <div className="flex rounded-[10px] bg-[#e4e8ef] p-1">
+          <div className="flex rounded-[10px] bg-line p-1">
             {(["think", "ask"] as const).map((m) => (
               <button key={m} onClick={() => toggleMode(m)} className={`h-8 rounded-[8px] px-3 text-[12.5px] font-bold ${mode === m ? "bg-card text-ink shadow-sm" : "text-ink-soft"}`}>
                 {m === "think" ? "Think with You" : "Ask"}

@@ -65,7 +65,7 @@ export default function Landing() {
               <div className="flex-1">
                 <div className="font-serif text-[19px] font-semibold text-ink">Video idea: sleep and focus</div>
                 <p className="mt-2 font-serif text-ink-soft">
-                  Most people think <span className="border-b border-[#e05e4a]">more sleep</span> means better focus. My angle is that <span className="border-b border-[#e05e4a]">everyone needs</span> the same eight hours, so the video should open with one big claim.
+                  Most people think <span className="border-b border-[#d9541e]">more sleep</span> means better focus. My angle is that <span className="border-b border-[#d9541e]">everyone needs</span> the same eight hours, so the video should open with one big claim.
                 </p>
               </div>
               <div className="w-[52%] rounded-xl border border-line bg-paper-soft p-3.5">
@@ -107,7 +107,7 @@ export default function Landing() {
         </div>
         <div className="mt-14 flex flex-col justify-between gap-6 rounded-[22px] bg-[var(--btn-dark)] px-8 py-9 md:flex-row md:items-center">
           <div>
-            <div className="font-serif text-[30px] font-medium leading-tight text-[var(--btn-dark-text,#f4f6fb)]" style={{ color: "#f4f6fb" }}>
+            <div className="font-serif text-[30px] font-medium leading-tight text-[var(--btn-dark-text,#f3eee3)]" style={{ color: "#f3eee3" }}>
               Marginalia is free.
             </div>
             <div className="mt-2 text-[14px] text-white/70">Fair-use AI limits for everyone. Where is the catch? There isn't one.</div>

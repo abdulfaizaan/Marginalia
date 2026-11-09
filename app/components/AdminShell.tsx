@@ -13,7 +13,7 @@ const NAV: [string, string][] = [
 
 export default function AdminShell({ active, children }: { active: string; children: React.ReactNode }) {
   return (
-    <div className="min-h-dvh bg-[#0e1524] text-white/80" style={{ background: "#0e1524" }}>
+    <div className="min-h-dvh bg-[#111111] text-white/80" style={{ background: "#111111" }}>
       <div className="mx-auto flex max-w-[1200px]">
         <aside className="hidden w-[220px] shrink-0 py-8 pl-6 sm:block">
           <Logo dark />

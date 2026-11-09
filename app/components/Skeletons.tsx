@@ -159,7 +159,7 @@ export function AccountSkeleton() {
 export function AuthSkeleton() {
   return (
     <div className="grid min-h-dvh lg:grid-cols-2">
-      <div className="hidden flex-col justify-between bg-[#101a2c] p-10 lg:flex">
+      <div className="hidden flex-col justify-between bg-[#111111] p-10 lg:flex">
         <div className="mg-skel--dark mg-skel h-6 w-40" />
         <div>
           <div className="mg-skel--dark mg-skel h-10 w-[28rem]" />
@@ -181,7 +181,7 @@ export function AuthSkeleton() {
 
 export function AdminSkeleton() {
   return (
-    <div className="min-h-dvh bg-[#0e1524]" style={{ background: "#0e1524" }}>
+    <div className="min-h-dvh bg-[#111111]" style={{ background: "#111111" }}>
       <div className="mx-auto flex max-w-[1200px]">
         <aside className="hidden w-[220px] shrink-0 py-8 pl-6 sm:block">
           <div className="mg-skel--dark mg-skel h-6 w-28" />

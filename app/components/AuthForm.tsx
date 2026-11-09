@@ -42,7 +42,7 @@ export default function AuthForm() {
 
   return (
     <div className="grid min-h-dvh lg:grid-cols-2">
-      <div className="hidden flex-col justify-between bg-[#101a2c] p-10 lg:flex" style={{ background: "#101a2c" }}>
+      <div className="hidden flex-col justify-between bg-[#111111] p-10 lg:flex" style={{ background: "#111111" }}>
         <Logo dark />
         <div>
           <h1 className="max-w-[16ch] font-serif text-[54px] font-medium leading-[1.06] text-white">
@@ -62,7 +62,7 @@ export default function AuthForm() {
       <div className="flex items-center justify-center bg-paper p-6">
         <div className="w-full max-w-[400px]">
           <div className="mb-6 lg:hidden"><Logo /></div>
-          <div className="mb-7 flex rounded-xl bg-[#e4e8ef] p-1">
+          <div className="mb-7 flex rounded-xl bg-line p-1">
             {(["signin", "signup"] as const).map((m) => (
               <button
                 key={m}

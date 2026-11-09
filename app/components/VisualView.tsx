@@ -127,14 +127,14 @@ function SpecView({ spec, stepIdx, onStep, onPin }: { spec: VisualSpec; stepIdx:
               <tr>
                 <th className="h-9 w-9" />
                 {spec.colChars.map((ch, c) => (
-                  <th key={c} className="h-9 w-11 rounded-md bg-[#e2e7ee] font-serif text-[15px] text-ink">{ch}</th>
+                  <th key={c} className="h-9 w-11 rounded-md bg-line font-serif text-[15px] text-ink">{ch}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {spec.values.map((row, r) => (
                 <tr key={r}>
-                  <th className="h-11 rounded-md bg-[#e2e7ee] font-serif text-[15px] text-ink">{spec.rowChars[r]}</th>
+                  <th className="h-11 rounded-md bg-line font-serif text-[15px] text-ink">{spec.rowChars[r]}</th>
                   {row.map((val, c) => {
                     const idx = r === 0 || c === 0 ? -1 : (r - 1) * (C - 1) + (c - 1);
                     const shown = idx >= 0 && idx < filled;
