@@ -7,17 +7,17 @@ const FEATURES = [
   {
     title: "Think with You",
     body: "Marginalia watches as you write and speaks up in the margin: a question, a challenge to a premise, or a flag on a likely mistake. You choose how often, from Slow to Frequent.",
-    icon: "\uE5CB",
+    icon: "menu_book",
   },
   {
     title: "Ask mode",
     body: "Prefer silence? The AI stays quiet until you select a line and choose Probe this, or open Ask Marginalia. Stuck problems get a hint first, never the answer unless you ask.",
-    icon: "\uE8CA",
+    icon: "forum",
   },
   {
     title: "Step-through visuals",
     body: "Ask for a diagram, grid or sketch and move through it one stage at a time, like filling a dynamic programming table cell by cell.",
-    icon: "\uE9F6",
+    icon: "grid_view",
   },
 ];
 const PERSONAS = [
@@ -46,7 +46,7 @@ export default function Landing() {
         <span className="mb-6 inline-flex items-center rounded-full bg-[var(--chip-dir-bg)] px-3 py-1 text-[12px] font-bold text-[var(--chip-dir-ink)]">
           Free. Bring your own AI key.
         </span>
-        <div className="grid items-center gap-12 lg:grid-cols-[1.15fr,0.85fr]">
+        <div className="grid items-center gap-12 lg:grid-cols-[1.15fr_0.85fr]">
           <div>
             <h1 className="font-serif text-[54px] font-medium leading-[1.04] tracking-tight text-ink">
               The notebook that thinks <span className="italic">with</span> you, not <span className="italic">for</span> you.
@@ -85,7 +85,7 @@ export default function Landing() {
           <div className="mt-8 grid gap-5 md:grid-cols-3">
             {FEATURES.map((f) => (
               <div key={f.title} className="rounded-2xl border border-line bg-card p-6">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-line text-ink"> {"\u2758\u25AC"}</div>
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-line text-ink"><span className="msym text-[17px]">{f.icon}</span></div>
                 <h3 className="mt-4 text-[16px] font-bold text-ink">{f.title}</h3>
                 <p className="mt-2 text-[14px] leading-relaxed text-ink-soft">{f.body}</p>
               </div>

@@ -26,7 +26,7 @@ export function LibrarySkeleton() {
           <div className="mg-skel h-10 w-24" />
         </div>
       </header>
-      <div className="mx-auto grid max-w-[1330px] gap-8 px-5 py-7 lg:grid-cols-[250px,1fr]">
+      <div className="mx-auto grid max-w-[1330px] gap-8 px-5 py-7 lg:grid-cols-[250px_1fr]">
         <aside className="space-y-3">
           <Bars widths={["w-24 h-3"]} />
           <div className="space-y-2">
@@ -55,7 +55,7 @@ export function LibrarySkeleton() {
 
 export function NoteSkeleton() {
   return (
-    <div className="grid min-h-dvh max-lg:grid-cols-1 lg:grid-cols-[230px,minmax(0,1fr),380px]">
+    <div className="grid min-h-dvh max-lg:grid-cols-1 lg:grid-cols-[230px_minmax(0,1fr)_380px]">
       <aside className="border-r border-line bg-paper p-5 max-lg:hidden">
         <div className="mg-skel h-4 w-20" />
         <div className="mg-skel mt-5 h-9 w-full" />
@@ -111,7 +111,7 @@ export function OptionsSkeleton() {
 
 export function VisualSkeleton() {
   return (
-    <div className="grid min-h-dvh max-lg:grid-cols-1 lg:grid-cols-[minmax(0,1fr),380px]">
+    <div className="grid min-h-dvh max-lg:grid-cols-1 lg:grid-cols-[minmax(0,1fr)_380px]">
       <div className="border-r border-line bg-paper">
         <header className="flex h-14 shrink-0 items-center gap-3 border-b border-line px-4">
           <div className="mg-skel h-4 w-28 max-lg:hidden" />

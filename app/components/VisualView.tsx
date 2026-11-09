@@ -64,7 +64,7 @@ export default function VisualView({ noteId, noteTitle, visuals0, ask0 }: {
   const step = steps[Math.min(stepIdx, steps.length - 1)];
 
   return (
-    <div className="grid min-h-dvh lg:grid-cols-[minmax(0,1fr),380px]">
+    <div className="grid min-h-dvh lg:grid-cols-[minmax(0,1fr)_380px]">
       <div className="flex min-w-0 flex-col border-r border-line bg-paper">
         <header className="flex h-14 shrink-0 items-center gap-3 border-b border-line px-4">
           <Link href={`/notes/${noteId}`} className="text-[13px] font-semibold text-ink-soft hover:text-ink">← Back to note<LinkHint /></Link>

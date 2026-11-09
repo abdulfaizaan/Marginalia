@@ -115,4 +115,31 @@ const swapped = Buffer.from(secretBlob); swapped[0] ^= 0xff;
 ok(decryptSecret(swapped) === null, "decryptSecret fails closed on tamper");
 ok(decryptSecret("garbage") === null, "decryptSecret fails closed on garbage");
 
+// ---------- ui: tailwind arbitrary grid tracks must be _-separated (commas = dropped by browser) ----------
+const fs = await import("node:fs");
+const path = await import("node:path");
+const root = path.join(path.dirname("" + new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1")), "..");
+let gridScan = 0;
+const badGrids: string[] = [];
+const walk = (dir: string) => {
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    const p = path.join(dir, e.name);
+    if (e.isDirectory()) walk(p);
+    else if (e.name.endsWith(".tsx")) {
+      const src = fs.readFileSync(p, "utf8");
+      for (const m of src.matchAll(/grid-cols-\[([^\]]+)\]/g)) {
+        gridScan++;
+        if (m[1].replace(/\w+\([^()]*\)/g, "").includes(",")) badGrids.push(`${p}: ${m[0]}`);
+      }
+    }
+  }
+};
+walk(path.join(root, "app"));
+walk(path.join(root, "components"));
+ok(gridScan > 5 && badGrids.length === 0, `ui: grid-cols-[…] tracks are _-separated (${gridScan} scanned)`);
+
+const layoutSrc = fs.readFileSync(path.join(root, "app", "layout.tsx"), "utf8");
+const cssSrc = fs.readFileSync(path.join(root, "app", "globals.css"), "utf8");
+ok(layoutSrc.includes("Material+Symbols+Outlined") && cssSrc.includes("Material Symbols Outlined"), "ui: material symbols font loaded (layout + .msym)");
+
 console.log(`\n${n} checks passed.`);

@@ -281,7 +281,7 @@ export default function Editor({ note, margins0, ask0, visuals, notebooks }: Pro
       : "Ask mode — AI answers only when asked (select a line, or open Ask)";
 
   return (
-    <div className={`grid min-h-dvh ${focus ? "" : "lg:grid-cols-[230px,minmax(0,1fr),380px]"}`}>
+    <div className={`grid min-h-dvh ${focus ? "" : "lg:grid-cols-[230px_minmax(0,1fr)_380px]"}`}>
       {!focus && <SideRail noteId={note.id} notebooks={notebooks} visuals={visuals} />}
 
       <div className="flex min-w-0 flex-col border-r border-line bg-paper">
