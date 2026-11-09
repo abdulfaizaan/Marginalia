@@ -2,7 +2,7 @@
 export const CAPS = {
   notesMonth: 200,
   visualsMonth: 40,
-  versionsDays: 90, // 0 = unlimited
+  versionsDays: 30, // PRD ED-2: 30 days of version history
   exports: ["pdf", "word", "md"] as const,
 };
 

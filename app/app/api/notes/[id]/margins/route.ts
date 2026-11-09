@@ -39,7 +39,7 @@ export async function POST(req: Request, ctx: Ctx) {
     if (note.private) return Response.json({ ok: true, notes: [], provider: "journal-quiet" }); // Journal (Ask default) stays quiet in Think mode
     const u = usageGet(user.id);
     if (u.margin >= tier.notesMonth)
-      return Response.json({ capped: true, error: "You have used your free monthly margin limit. Add your own AI key in Settings — limits reset next month." }, { status: 429 });
+      return Response.json({ capped: true, error: "You have used your free monthly margin limit — it resets next month." }, { status: 429 });
     const blocks = (b.blocks || []).slice(0, 400).map((x) => ({ id: String(x.id).slice(0, 64), text: String(x.text || "").slice(0, 4000) }));
     const changedIds = (b.changedIds || []).slice(0, 40).map(String);
     const dismissed = (db.prepare("SELECT body FROM margins WHERE note_id=? AND status IN ('dismissed','thread')").all(id) as { body: string }[]).map((r) => r.body);
@@ -63,7 +63,7 @@ export async function POST(req: Request, ctx: Ctx) {
     if (b.marginId) {
       const u = usageGet(user.id);
       if (u.margin >= tier.notesMonth)
-        return Response.json({ capped: true, error: "You have used your free monthly margin limit. Add your own AI key in Settings — limits reset next month." }, { status: 429 });
+        return Response.json({ capped: true, error: "You have used your free monthly margin limit — it resets next month." }, { status: 429 });
       const m = db.prepare("SELECT * FROM margins WHERE id=? AND note_id=? AND user_id=?").get(b.marginId, id, user.id) as any;
       if (!m) return jsonError(404, "Margin note not found.");
       const transcript = (m.reply ? m.reply + "\n" : "") + "You: " + body;
@@ -74,7 +74,7 @@ export async function POST(req: Request, ctx: Ctx) {
       // free-standing question in the margin panel → behaves like Ask, lands as chat
       const u = usageGet(user.id);
       if (u.margin >= tier.notesMonth)
-        return Response.json({ capped: true, error: "You have used your free monthly margin limit. Add your own AI key in Settings — limits reset next month." }, { status: 429 });
+        return Response.json({ capped: true, error: "You have used your free monthly margin limit — it resets next month." }, { status: 429 });
       const mid = uid();
       db.prepare("INSERT INTO ask_messages VALUES(?,?,?,?,?,?,?,?)").run(mid, id, user.id, "user", body, "nudge", 0, Date.now());
       let strictness: "strict" | "balanced" | "direct" = "balanced";

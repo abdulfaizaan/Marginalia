@@ -10,8 +10,7 @@ const M_KEYS = [
   ["originalThought", "Original thought", "Share of AI-origin words on pages"],
   ["usefulness", "Usefulness", "👍 rate on margin notes"],
   ["retention", "4-week retention", "Active in week 4 after joining"],
-  ["byok", "BYOK adoption", "Users running margins on their own AI key"],
-  ["aiCost", "AI cost share", "Of revenue, ceiling 30%"],
+  ["notesWritten", "Margin notes written", "AI notes generated for users"],
 ] as const;
 
 interface Metrics {
@@ -35,7 +34,7 @@ export default function AdminOverview() {
     setFlagged((q) => q.filter((f) => f.id !== id));
   }
 
-  const byok = m?.byok as { value: string; target: string; onTarget: boolean } | undefined;
+  const notesWritten = m?.notesWritten as { value: string; target: string; onTarget: boolean } | undefined;
 
   return (
     <AdminShell active="Overview">
@@ -69,12 +68,12 @@ export default function AdminOverview() {
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
         <div className="rounded-2xl border border-white/10 bg-white/[0.05] p-5">
-          <div className="text-[14px] font-bold text-white">AI keys set</div>
-          <p className="mt-1 text-[12.5px] text-white/55">{typeof m?.keyed === "number" && typeof m?.userCount === "number" ? `${m.keyed} of ${m.userCount} users bring their own key` : "…"}</p>
+          <div className="text-[14px] font-bold text-white">AI on for everyone</div>
+          <p className="mt-1 text-[12.5px] text-white/55">{typeof m?.userCount === "number" ? `${m.userCount} users run margins on the app's central key` : "…"}</p>
           <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
-            <div className="h-full rounded-full bg-[#6b93ff]" style={{ width: byok ? byok.value : "0%" }} />
+            <div className="h-full rounded-full bg-[#6b93ff]" style={{ width: notesWritten && notesWritten.onTarget ? "100%" : "4%" }} />
           </div>
-          <p className="mt-2 text-[12px] text-white/50">Keys are AES-GCM-encrypted at rest; users pay their own vendor bill.</p>
+          <p className="mt-2 text-[12px] text-white/50">Fair-use caps keep costs down; no per-user billing surfaces.</p>
         </div>
 
         <div className="rounded-2xl border border-white/10 bg-white/[0.05] p-5">

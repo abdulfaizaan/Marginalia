@@ -58,21 +58,6 @@ ok(!!rx && rx.base === "https://api.x.ai/v1" && rx.model === "grok-3-mini", "rou
 const rc = routeFor({ vendor: "custom", base: "http://127.0.0.1:11434/v1", model: "llama3.1" }, "o");
 ok(!!rc && rc.name === "custom" && rc.base === "http://127.0.0.1:11434/v1", "routeFor: custom base honored");
 
-// ---------- aikey validation ----------
-const { validateAiKey } = await import("../lib/aikey.ts");
-ok(validateAiKey({ vendor: "openai", key: "sk-12345678" }).ok === true, "aikey: openai ok");
-ok(validateAiKey({ vendor: "nonsense", key: "k" }).ok === false, "aikey: unknown vendor rejected");
-ok(validateAiKey({ vendor: "gemini", key: "" }).ok === false, "aikey: empty key rejected");
-const badCustom = validateAiKey({ vendor: "custom", key: "x", model: "m" });
-ok(badCustom.ok === false, "aikey: custom without base rejected");
-const okCustom = validateAiKey({ vendor: "custom", key: "x", model: "llama3.1", base: "http://127.0.0.1:11434/v1" });
-ok(okCustom.ok === true, "aikey: custom ok with base+model");
-// review fixes: metadata-only save (stored key kept) + link-local/cloud-metadata SSRF block
-ok(validateAiKey({ vendor: "custom", key: "", model: "llama3.1", base: "http://10.0.0.5:11434/v1" }, true).ok === true, "aikey: metadata-only save keeps stored key");
-ok(validateAiKey({ vendor: "custom", key: "", model: "llama3.1", base: "http://10.0.0.5:11434/v1" }).ok === false, "aikey: empty key without stored key rejected");
-ok(validateAiKey({ vendor: "custom", key: "x", model: "llama3.1", base: "http://169.254.169.254/latest/meta-data" }).ok === false, "aikey: cloud-metadata IP blocked");
-ok(validateAiKey({ vendor: "custom", key: "x", model: "llama3.1", base: "http://[fe80::1]:11434/v1" }).ok === false, "aikey: IPv6 link-local blocked");
-
 // ---------- visualize: pair parsing + LCS grid ----------
 const pair = parsePair("starting with ABCB against BDCB.");
 ok(!!pair && pair.a === "ABCB" && pair.b === "BDCB", "parsePair reads the mock selection");
@@ -106,14 +91,17 @@ const shown = toMarkdown("T", doc, { hideAi: false, margins: [], footnotes: fals
 ok(shown.includes("AI (question)") ? shown.includes("What if the opposite held?") : false, "md keeps AI text when not hidden");
 ok(toPrintHtml("T", doc, { hideAi: false, margins: [], footnotes: false }).includes("window.print()"), "print HTML auto-opens print dialog");
 
-// ---------- crypto: secrets at rest ----------
-const { encryptSecret, decryptSecret } = await import("../lib/crypto.ts");
-const secretBlob = encryptSecret("sk-test-1234567890");
-ok(secretBlob.length > 28, "encryptSecret produces non-trivial blob");
-ok(decryptSecret(secretBlob) === "sk-test-1234567890", "decryptSecret round-trips");
-const swapped = Buffer.from(secretBlob); swapped[0] ^= 0xff;
-ok(decryptSecret(swapped) === null, "decryptSecret fails closed on tamper");
-ok(decryptSecret("garbage") === null, "decryptSecret fails closed on garbage");
+// ---------- central AI key: env-derived config (fail closed) ----------
+const { userAiConfig } = await import("../lib/db.ts");
+const realKey = process.env.GEMINI_API_KEY;
+process.env.GEMINI_API_KEY = "sk-dummy-placeholder"; // flagged dummy → must never route
+ok(userAiConfig("any-user") === null, "userAiConfig: dummy/placeholder key → null (offline)");
+process.env.GEMINI_API_KEY = "AQ.test-real-key";
+const cfg = userAiConfig("any-user");
+ok(!!cfg && cfg.vendor === "gemini" && cfg.key === "AQ.test-real-key" && cfg.base === null, "userAiConfig: real key → central gemini config");
+delete process.env.GEMINI_API_KEY;
+ok(userAiConfig("any-user") === null, "userAiConfig: unset key → null (offline)");
+if (realKey !== undefined) process.env.GEMINI_API_KEY = realKey;
 
 // ---------- ui: tailwind arbitrary grid tracks must be _-separated (commas = dropped by browser) ----------
 const fs = await import("node:fs");

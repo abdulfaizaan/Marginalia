@@ -40,7 +40,7 @@ function Users() {
       <div className="flex flex-wrap items-center gap-3">
         <h1 className="mr-auto font-serif text-[30px] font-medium text-white">Users</h1>
         <div className="flex rounded-xl bg-white/5 p-1">
-          {["All", "Keyed", "Demo"].map((f) => (
+          {["All", "Demo"].map((f) => (
             <button key={f} onClick={() => setFilter(f)} className={`h-8 rounded-[8px] px-3 text-[12.5px] font-bold ${filter === f ? "bg-white/15 text-white" : "text-white/60"}`}>{f}</button>
           ))}
         </div>
@@ -58,7 +58,7 @@ function Users() {
               <Fragment key={u.id}>
                 <tr className="text-white/85">
                   <td className="px-4 py-2.5">{u.email}</td>
-                  <td className="px-4 py-2.5"><Chip small kind={u.ai_vendor ? "direction" : "question"}>{u.ai_vendor || "demo"}</Chip></td>
+                  <td className="px-4 py-2.5"><Chip small kind="direction">on</Chip></td>
                   <td className="px-4 py-2.5 text-white/55">{timeAgo(u.joined_at)}</td>
                   <td className="px-4 py-2.5 text-white/55">{timeAgo(u.last_active)}</td>
                   <td className="px-4 py-2.5">{u.status === "deletion_requested" ? <span className="font-bold text-rose-300">deletion requested</span> : <span className="text-white/50">active</span>}</td>
@@ -69,7 +69,7 @@ function Users() {
                     <td colSpan={6} className="px-4 py-3 text-white/65">
                       <div className="flex flex-wrap items-center gap-6">
                         <span>Name: {u.name || "—"}</span>
-                        <span>AI: {u.ai_vendor || "demo margins (no key)"}</span>
+                        <span>AI: always on (central key)</span>
                         <span className="text-white/40">Member content stays hidden — admins cannot open notebooks.</span>
                         {u.status === "deletion_requested" && (
                           <button onClick={() => completeDeletion(u.id)} className="rounded-lg bg-rose-600 px-3 py-1.5 text-[12px] font-bold text-white">Complete deletion</button>
@@ -173,6 +173,6 @@ function Audit() {
   );
 }
 
-interface URow { id: string; email: string; name: string; ai_vendor: string | null; joined_at: number; last_active: number; status: string }
+interface URow { id: string; email: string; name: string; joined_at: number; last_active: number; status: string }
 interface QRow { id: string; type: string; body: string }
 interface QRated { body: string; type: string; rating: number }

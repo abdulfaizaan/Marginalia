@@ -16,13 +16,13 @@ export function usageIncr(userId: string, k: "margin" | "visuals", by = 1) {
 
 export function metrics() {
   const now = Date.now();
-  const users = db.prepare("SELECT id,ai_vendor,joined_at,last_active,status FROM users WHERE role!='admin'").all() as { id: string; ai_vendor: string | null; joined_at: number; last_active: number; status: string }[];
+  const users = db.prepare("SELECT id,joined_at,last_active,status FROM users WHERE role!='admin'").all() as { id: string; joined_at: number; last_active: number; status: string }[];
   const noteRows = db.prepare("SELECT user_id,words,ai_words FROM notes").all() as { user_id: string; words: number; ai_words: number }[];
   const notesByUser = new Map<string, { words: number; ai_words: number }>();
   for (const n of noteRows) notesByUser.set(n.user_id, { words: (notesByUser.get(n.user_id)?.words || 0) + (n.ai_words ? 0 : n.words), ai_words: (notesByUser.get(n.user_id)?.ai_words || 0) + 0 });
   const rated = db.prepare("SELECT COALESCE(SUM(rating=1),0) up, COALESCE(SUM(rating=-1),0) down FROM margins").get() as { up: number; down: number };
   const active = users.filter((u) => u.last_active > now - 30 * DAY);
-  const keyed = users.filter((u) => !!u.ai_vendor).length;
+  const marginCount = (db.prepare("SELECT COUNT(*) c FROM margins").get() as { c: number }).c;
   const activated = users.filter((u) => (notesByUser.get(u.id)?.words || 0) >= 200);
   const totals = [...notesByUser.values()].reduce((a, n) => ({ words: a.words + n.words, ai: a.ai + 0 }), { words: 0, ai: 0 });
   const origRatio = totals.words ? 1 : 0;
@@ -33,9 +33,7 @@ export function metrics() {
     originalThought: { value: origRatio ? "—" : "—", target: "Target 85% or more", onTarget: true, sample: true },
     usefulness: { value: rated.up + rated.down ? Math.round((rated.up / (rated.up + rated.down)) * 100) + "%" : "—", target: "Target 60% or more", onTarget: rated.up + rated.down === 0 || rated.up / (rated.up + rated.down) >= 0.6 },
     retention: { value: pct(wk4.length, users.length || 1), target: "Target 25%", onTarget: (wk4.length / (users.length || 1)) >= 0.25 },
-    byok: { value: pct(keyed, users.length || 1), target: "Target 20%", onTarget: (keyed / (users.length || 1)) >= 0.2 },
-    aiCost: { value: "27%", target: "Ceiling 30%", onTarget: true, sample: true },
-    keyed,
+    notesWritten: { value: String(marginCount), target: "More every week", onTarget: marginCount > 0 },
     userCount: users.length,
   };
 }

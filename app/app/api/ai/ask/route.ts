@@ -12,7 +12,7 @@ export async function POST(req: Request) {
   const tier = CAPS; // SP1: single fair-use tier
   const u = usageGet(user.id);
   if (u.margin >= tier.notesMonth)
-    return Response.json({ capped: true, error: "You have used your free monthly margin limit. Add your own AI key in Settings — limits reset next month." }, { status: 429 });
+    return Response.json({ capped: true, error: "You have used your free monthly margin limit — it resets next month." }, { status: 429 });
 
   let noteText = "", noteId = "", noteSettings = "{}";
   if (b.noteId) {

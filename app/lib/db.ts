@@ -2,7 +2,6 @@ import { DatabaseSync } from "node:sqlite";
 import { randomUUID, scryptSync, randomBytes, timingSafeEqual } from "node:crypto";
 import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { decryptSecret } from "./crypto";
 
 // ---------- schema ----------
 const SCHEMA = `
@@ -79,14 +78,14 @@ function seedUsers(db: DatabaseSync) {
     );
     return id;
   };
-  const maya = mk("maya@example.com", "plus", "LAUNCH50", now - 35 * DAY);
+  const maya = mk("maya@example.com", "free", null, now - 35 * DAY);
   mk("dev@example.com", "free", null, now - 29 * DAY);
-  mk("sam@example.com", "pro", null, now - 47 * DAY);
-  mk("lee@example.com", "plus", "LAUNCH50", now - 24 * DAY);
+  mk("sam@example.com", "free", null, now - 47 * DAY);
+  mk("lee@example.com", "free", null, now - 24 * DAY);
   mk("jo@example.com", "free", null, now - 10 * DAY);
   mk("kai@example.com", "free", null, now - 7 * DAY, "deletion_requested");
-  mk("ren@example.com", "plus", null, now - 38 * DAY);
-  mk("ana@example.com", "pro", null, now - 36 * DAY);
+  mk("ren@example.com", "free", null, now - 38 * DAY);
+  mk("ana@example.com", "free", null, now - 36 * DAY);
   const admin = uid();
   db.prepare("INSERT INTO users VALUES(?,?,?,?,?,?,?,0,'active',1,'{}',?,?)").run(
     admin, "admin@marginalia.app", hashPassword("admin1234"), "Admin", "user", "admin", null, now - 90 * DAY, now - DAY
@@ -154,14 +153,11 @@ function seedUsers(db: DatabaseSync) {
   db.prepare("INSERT INTO margins(id,note_id,user_id,anchor,num,type,body,status,level,review_state,created_at,orig_created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)").run
     (uid(), vid, maya, "x3", 1, "direction", "Consider adding an example for each case.", "dismissed", 1, "flagged", now - 4 * DAY, now - 4 * DAY);
 
-  // promo + usage + audit
-  db.prepare("INSERT INTO promo_codes VALUES(?,?,?,?)").run("LAUNCH50", 100, 62, "50% off Plus, first 100 users, 3 months at $4.99");
-  db.prepare("INSERT INTO promo_redemptions VALUES(?,?,?,?)").run(uid(), maya, "LAUNCH50", now - 35 * DAY);
-  db.prepare("INSERT INTO promo_redemptions VALUES(?,?,?,?)").run(uid(), uid(), "LAUNCH50", now - 24 * DAY);
+  // usage + audit (the app is free — no promo/billing surfaces)
   db.prepare("INSERT INTO usage VALUES(?,?,?,?)").run(monthKey(now), maya, 18, 1);
   const a = (d: string) => db.prepare("INSERT INTO audit VALUES(?,?,?,?,?)").run(uid(), "admin@marginalia.app", d, "", now - d.length * DAY);
-  a("Promo cap for LAUNCH50 checked at 100");
-  a("User moved from Free to Plus after a support request");
+  a("Monthly fair-use report reviewed");
+  a("Reviewed flagged margin notes");
   a("Account deletion request completed");
 }
 
@@ -183,14 +179,6 @@ function createDb(): DatabaseSync {
   mkdirSync(dirname(full), { recursive: true });
   const db = new DatabaseSync(full);
   db.exec(SCHEMA);
-  // SP1: per-user AI key config (BYOK). Guarded ADD COLUMN for existing DBs.
-  const cols = (db.prepare("PRAGMA table_info(users)").all() as { name: string }[]).map((c) => c.name);
-  // try/catch tolerates a parallel init racing the same file (dev hot reload / build workers): "duplicate column name".
-  const alter = (col: string, ddl: string) => { if (!cols.includes(col)) { try { db.exec(ddl); } catch { /* already added elsewhere */ } } };
-  alter("ai_vendor", `ALTER TABLE users ADD COLUMN ai_vendor TEXT`);
-  alter("ai_key_enc", `ALTER TABLE users ADD COLUMN ai_key_enc BLOB`);
-  alter("ai_model", `ALTER TABLE users ADD COLUMN ai_model TEXT`);
-  alter("ai_base", `ALTER TABLE users ADD COLUMN ai_base TEXT`);
   const n = (db.prepare("SELECT COUNT(*) c FROM users").get() as { c: number }).c;
   if (n === 0) seedUsers(db);
   return db;
@@ -205,13 +193,14 @@ export interface NoteRow { id: string; user_id: string; notebook_id: string; tit
 export interface MarginRow { id: string; note_id: string; user_id: string; anchor: string; num: number; type: string; body: string; reply: string | null; status: string; rating: number | null; level: number; want_visual: number; review_state: string | null; created_at: number; orig_created_at: number | null; }
 export interface UserRow { id: string; email: string; password: string; name: string; plan: string; role: string; promo: string | null; promo_months: number; status: string; age_ok: number; settings: string; joined_at: number; last_active: number; ai_vendor: string | null; ai_key_enc: Buffer | null; ai_model: string | null; ai_base: string | null; }
 
-// SP1: the signed-in user's own AI vendor config, decrypted per request; never logged, never returned to clients.
+// Central AI key (original PRD): the app itself carries one vendor key from .env —
+// no per-user key UI. Unset or explicitly-dummy keys never route; the offline engine covers those.
+// Kept per-user-shaped (AiKeyCfg) so every route call site stays untouched. mark: userId ignored.
 export interface AiKeyCfg { vendor: string | null; model: string | null; base: string | null; key: string | null }
 export function userAiConfig(userId: string): AiKeyCfg | null {
-  const r = db.prepare("SELECT ai_vendor, ai_key_enc, ai_model, ai_base FROM users WHERE id=?").get(userId) as
-    | { ai_vendor: string | null; ai_key_enc: Buffer | null; ai_model: string | null; ai_base: string | null } | undefined;
-  if (!r?.ai_vendor) return null;
-  return { vendor: r.ai_vendor, model: r.ai_model, base: r.ai_base, key: decryptSecret(r.ai_key_enc) };
+  const key = process.env.GEMINI_API_KEY;
+  if (!key || /dummy|placeholder/i.test(key)) return null; // flagged dummies never leave the machine
+  return { vendor: "gemini", model: process.env.GEMINI_MODEL || null, base: null, key };
 }
 
 export function parseSettings(s: string) {

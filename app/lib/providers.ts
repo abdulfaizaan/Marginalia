@@ -6,7 +6,7 @@ import { thinkEvaluate, askRespond, journalRespond, validDraft, capWords, countW
 const VENDOR_DEFAULTS = {
   openai: { base: "https://api.openai.com/v1", model: "gpt-4o-mini" },
   xai:    { base: "https://api.x.ai/v1",      model: "grok-3-mini" },
-  gemini: { base: "https://generativelanguage.googleapis.com/v1beta", model: "gemini-2.0-flash" },
+  gemini: { base: "https://generativelanguage.googleapis.com/v1beta", model: "gemini-flash-latest" }, // alias tracks the current flash; concrete names retire too fast (2.0-flash died Nov 2026)
 } as const;
 
 export interface Rt { name: "openai" | "xai" | "gemini" | "custom"; base: string; key: string; model: string }
@@ -40,6 +40,7 @@ export async function marginNotes(req: MarginRequest, keyCfg: Kc = null): Promis
       '{"notes":[{"anchor":"<block id from the provided blocks>","type":"question|challenge|error|direction","body":"<=60 words","wantVisual":true|false}]}',
       "Types: question (guiding question), challenge (attacks a premise), error (flags a likely mistake but NEVER states the corrected answer — ask instead), direction (suggests next move; set wantVisual=true when a step-through grid or sketch would help).",
       "Keep each note under 60 words. Never praise-only. Anchor notes to specific blocks. Challenge, don't flatter.",
+      "Be honest about uncertainty: say plainly when you are unsure, and distinguish facts from suggestions.",
     ].join(" ");
     const user = [
       `Note blocks (id: text): ${req.blocks.map((b) => `${b.id}: ${b.text}`).join(" | ")}`,
@@ -70,7 +71,7 @@ export async function askAI(inp: AskInput, keyCfg: Kc = null): Promise<(AskResp 
       "You are Marginalia in Ask mode. The user wrote a note; they ask you for help.",
       "You follow a 4-step hint ladder: level 1 nudge question, level 2 name the concept, level 3 work one partial step, level 4 full answer.",
       "Full answers (level 4) are ONLY allowed when the user explicitly asks AND the hint strictness permits (Direct setting, or must have walked rungs 1-3).",
-      "Never write content for their note. Respond as JSON:",
+      "Never write content for their note. If you are unsure, say so and distinguish facts from suggestions. Respond as JSON:",
       '{"body":"<=60 words","kind":"hint|answer","level":1..4}',
     ].join(" ");
     const user = `Note: ${inp.noteText.slice(0, 2000)}\nSelection: ${inp.selection || "none"}\nLadder level so far: ${inp.hintLevel}\nUser: ${inp.userMessage}`;

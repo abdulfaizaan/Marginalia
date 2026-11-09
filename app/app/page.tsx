@@ -44,7 +44,7 @@ export default function Landing() {
 
       <section className="mx-auto max-w-6xl px-5 pb-16 pt-16">
         <span className="mb-6 inline-flex items-center rounded-full bg-[var(--chip-dir-bg)] px-3 py-1 text-[12px] font-bold text-[var(--chip-dir-ink)]">
-          Free. Bring your own AI key.
+          Free forever.
         </span>
         <div className="grid items-center gap-12 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
           <div>
@@ -108,9 +108,9 @@ export default function Landing() {
         <div className="mt-14 flex flex-col justify-between gap-6 rounded-[22px] bg-[var(--btn-dark)] px-8 py-9 md:flex-row md:items-center">
           <div>
             <div className="font-serif text-[30px] font-medium leading-tight text-[var(--btn-dark-text,#f4f6fb)]" style={{ color: "#f4f6fb" }}>
-              Marginalia is free. Bring your own AI key — or use demo margins.
+              Marginalia is free.
             </div>
-            <div className="mt-2 text-[14px] text-white/70">Your key, your bill, your privacy. Where is the catch? There isn't one.</div>
+            <div className="mt-2 text-[14px] text-white/70">Fair-use AI limits for everyone. Where is the catch? There isn't one.</div>
           </div>
           <Link href="/sign-in?mode=signup" className={btnGhost + " !border-0 bg-white text-ink"}>
             Start writing free

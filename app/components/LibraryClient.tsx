@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api, timeAgo } from "@/lib/client";
-import { Chip, Logo, btnGhost, btnMini, btnPrimary, inputCls, Card } from "@/components/ui";
+import { Chip, Logo, btnGhost, btnPrimary, inputCls, Card } from "@/components/ui";
 import LinkHint from "@/components/LinkHint";
 import { CAPS } from "@/lib/plans";
 
@@ -20,19 +20,13 @@ interface Props {
   hasAi: boolean;
 }
 
-export default function LibraryClient({ user, notebooks, notes, used, hasAi }: Props) {
+export default function LibraryClient({ user, notebooks, notes, used }: Props) {
   const router = useRouter();
   const [q, setQ] = useState("");
   const [lib, setLib] = useState<"all" | "recent" | "pinned">("all");
   const [nbFilter, setNbFilter] = useState<string | null>(null);
   const [sort, setSort] = useState<"recent" | "az">("recent");
   const [busy, startBusy] = useTransition();
-
-  // one-time nudge: add your key banner (dismissal persists in localStorage)
-  const [nudge, setNudge] = useState(false);
-  useEffect(() => {
-    try { if (!localStorage.getItem("mg-nudge-key") && !hasAi) setNudge(true); } catch { /* private mode */ }
-  }, [hasAi]);
 
   // SP1: single fair-use tier (caps live in CAPS)
   const tier = { label: "Free", notesMonth: CAPS.notesMonth };
@@ -43,7 +37,7 @@ export default function LibraryClient({ user, notebooks, notes, used, hasAi }: P
     if (lib === "pinned") list = list.filter((n) => n.pinned);
     if (q.trim()) {
       const s = q.toLowerCase();
-      list = list.filter((n) => n.title.toLowerCase().includes(s) || n.notebook.toLowerCase().includes(s));
+      list = list.filter((n) => n.title.toLowerCase().includes(s) || n.notebook.toLowerCase().includes(s) || (n.snippet || "").toLowerCase().includes(s));
     }
     return [...list].sort((a, b) => (sort === "recent" ? b.updated_at - a.updated_at : a.title.localeCompare(b.title)));
   }, [notes, q, lib, nbFilter, sort]);
@@ -71,21 +65,6 @@ export default function LibraryClient({ user, notebooks, notes, used, hasAi }: P
           </div>
         </div>
       </header>
-
-      <div className="mx-auto max-w-[1330px] px-5 pt-4">
-        {nudge && (
-          <div className="mx-auto flex items-center justify-between gap-3 rounded-xl border border-line bg-card px-4 py-3 text-[13.5px]">
-            <span className="text-ink-soft">Demo margins are on. Add your own AI key to make the margins really think.</span>
-            <span className="flex items-center gap-2">
-              <Link href="/account" className={btnGhost}>Set your AI key</Link>
-              <button
-                onClick={() => { setNudge(false); try { localStorage.setItem("mg-nudge-key", "1"); } catch { /* private mode */ } }}
-                className={btnMini}
-              >Dismiss</button>
-            </span>
-          </div>
-        )}
-      </div>
 
       <div className="mx-auto grid max-w-[1330px] gap-8 px-5 py-7 lg:grid-cols-[250px_minmax(0,1fr)]">
         {/* rail */}
@@ -123,7 +102,6 @@ export default function LibraryClient({ user, notebooks, notes, used, hasAi }: P
               <div className="h-full rounded-full bg-accent" style={{ width: `${Math.min(100, (used.margin / tier.notesMonth) * 100)}%` }} />
             </div>
             <div className="mt-2 text-[12.5px] text-ink-soft">{used.margin} of {tier.notesMonth} used</div>
-            <Link href="/account" className={btnGhost + " mt-3 w-full text-accent"}>Your AI key</Link>
           </Card>
         </aside>
 

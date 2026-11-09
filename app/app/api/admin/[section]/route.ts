@@ -16,11 +16,9 @@ export async function GET(req: Request, ctx: Ctx) {
     return Response.json({ m: metrics(), flagged, activity });
   }
   if (section === "users") {
-    const filter = url.searchParams.get("plan") || "All";
     const q = (url.searchParams.get("q") || "").toLowerCase().trim();
-    let rows = db.prepare("SELECT id,email,name,ai_vendor,joined_at,last_active,status FROM users WHERE role!='admin' ORDER BY joined_at").all() as any[];
-    if (filter === "keyed") rows = rows.filter((r) => !!r.ai_vendor);
-    else if (filter === "demo") rows = rows.filter((r) => !r.ai_vendor);
+    // central key: every user runs on the app's AI; pills are All|Demo → no per-user split anymore
+    let rows = db.prepare("SELECT id,email,name,joined_at,last_active,status FROM users WHERE role!='admin' ORDER BY joined_at").all() as any[];
     if (q) rows = rows.filter((r) => r.email.toLowerCase().includes(q));
     return Response.json({ users: rows });
   }

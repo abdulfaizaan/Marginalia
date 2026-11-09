@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api, setTheme } from "@/lib/client";
-import { btnGhost, btnPrimary, Card, Chip, inputCls } from "@/components/ui";
+import { btnGhost, Card, Chip } from "@/components/ui";
 import LinkHint from "@/components/LinkHint";
 
 interface Props {
@@ -14,60 +14,12 @@ interface Props {
   hasAi: boolean;
 }
 
-const VENDORS = [
-  ["openai", "OpenAI"],
-  ["xai", "Grok (xAI)"],
-  ["gemini", "Google Gemini"],
-  ["custom", "Custom (OpenAI-compatible)"],
-] as const;
-
-export default function AccountClient({ user, used, caps, hasAi }: Props) {
+export default function AccountClient({ user, used, caps }: Props) {
   const router = useRouter();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [wipe, setWipe] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-
-  // --- AI key card state (POST /api/account/ai-key; key is write-only, never echoed back) ---
-  const [aiSet, setAiSet] = useState(hasAi);
-  const [aiVendor, setAiVendor] = useState<string | null>(null);
-  const [vendorSel, setVendorSel] = useState("openai");
-  const [keyIn, setKeyIn] = useState("");
-  const [modelIn, setModelIn] = useState("");
-  const [baseIn, setBaseIn] = useState("");
-  const [aiStatus, setAiStatus] = useState<string | null>(null);
-
-  async function loadAi(statusNote?: string) {
-    try {
-      const j = await api<{ set: boolean; vendor: string | null; model: string | null; base: string | null }>("/api/account/ai-key");
-      setAiSet(j.set); setAiVendor(j.vendor);
-      setVendorSel(j.vendor || "openai"); setModelIn(j.model || ""); setBaseIn(j.base || "");
-      setKeyIn("");
-      if (statusNote !== undefined) setAiStatus(statusNote);
-      else setAiStatus(j.set ? (j.vendor === "custom" ? `Live: ${j.vendor} · ${j.model} at ${j.base}` : j.model ? `Live: ${j.vendor} · ${j.model}` : `Live: ${j.vendor}`) : "No key set — demo margins are on.");
-    } catch { setAiStatus(null); }
-  }
-  useEffect(() => { loadAi(); }, []);
-
-  async function saveKey() {
-    setBusy(true); setMsg(null);
-    try {
-      await api("/api/account/ai-key", { method: "POST", body: JSON.stringify({ vendor: vendorSel, key: keyIn, model: modelIn || undefined, base: baseIn || undefined }) });
-      await loadAi(keyIn ? "Saved. Your key is encrypted on our server — margins and Ask now run on it." : "Saved. Your stored key was kept — vendor/model updated.");
-    } catch (x: unknown) {
-      setMsg(x instanceof Error ? x.message : "Something went wrong.");
-    } finally { setBusy(false); }
-  }
-
-  async function removeKey() {
-    setBusy(true); setMsg(null);
-    try {
-      await api("/api/account/ai-key", { method: "DELETE" });
-      await loadAi("Key removed. Demo margins resume — nothing else changed.");
-    } catch (x: unknown) {
-      setMsg(x instanceof Error ? x.message : "Something went wrong.");
-    } finally { setBusy(false); }
-  }
 
   async function post(action: string, extra?: Record<string, unknown>) {
     setBusy(true); setMsg(null);
@@ -131,51 +83,6 @@ export default function AccountClient({ user, used, caps, hasAi }: Props) {
         </Card>
 
         {msg && <div className="rounded-lg bg-emerald-50 px-4 py-2.5 text-[13px] font-semibold text-emerald-800">{msg}</div>}
-
-        <Card className="p-6">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h2 className="text-[17px] font-bold text-ink">Your AI key</h2>
-              <p className="mt-1.5 text-[13.5px] text-ink-soft">
-                Marginalia is free — margins and Ask run on <i>your own</i> vendor key: your provider bill, your privacy.
-                The key is stored encrypted, never shown again, and nothing runs without it.
-              </p>
-            </div>
-            <Chip kind={aiSet ? "direction" : "question"} small>{aiSet ? "on" : "demo"}</Chip>
-          </div>
-          <p className="mt-3 rounded-lg bg-paper-soft px-3 py-2 text-[13px] text-ink-soft">{aiStatus || "…"}</p>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <label className="text-[13px] font-semibold text-ink">
-              Vendor
-              <select value={vendorSel} onChange={(e) => setVendorSel(e.target.value)} className={inputCls + " mt-1"}>
-                {VENDORS.map(([v, t]) => <option key={v} value={v}>{t}</option>)}
-              </select>
-            </label>
-            <label className="text-[13px] font-semibold text-ink">
-              API key
-              <input type="password" value={keyIn} onChange={(e) => setKeyIn(e.target.value)} autoComplete="off" placeholder="sk-…" className={inputCls + " mt-1"} />
-            </label>
-            {vendorSel === "custom" && (
-              <>
-                <label className="text-[13px] font-semibold text-ink">
-                  Base URL
-                  <input value={baseIn} onChange={(e) => setBaseIn(e.target.value)} placeholder="http://127.0.0.1:11434/v1" className={inputCls + " mt-1"} />
-                </label>
-                <label className="text-[13px] font-semibold text-ink">
-                  Model
-                  <input value={modelIn} onChange={(e) => setModelIn(e.target.value)} placeholder="llama3.1" className={inputCls + " mt-1"} />
-                </label>
-              </>
-            )}
-          </div>
-          <div className="mt-4 flex items-center gap-2.5">
-            <button onClick={saveKey} disabled={busy || (!aiSet && !keyIn)} className={btnPrimary + " !h-10"}>
-              {aiSet ? (keyIn ? "Replace key" : "Save changes") : "Save key"}
-            </button>
-            {aiSet && <button onClick={removeKey} disabled={busy} className={btnGhost}>Remove key</button>}
-          </div>
-          {aiSet && <p className="mt-2 text-[12px] text-muted">No key handy? Save changes keeps the stored key and only updates the vendor/model.</p>}
-        </Card>
 
         <Card className="p-6">
           <h2 className="text-[17px] font-bold text-ink">Your data</h2>

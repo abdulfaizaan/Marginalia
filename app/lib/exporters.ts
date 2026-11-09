@@ -42,8 +42,14 @@ export function toMarkdown(title: string, docJson: Doc, opts: { hideAi: boolean;
       lines.push("```", b.content?.map((r) => r.text).join("") || "", "```", "");
     } else if (b.type === "heading") {
       lines.push("#".repeat(Number(b.attrs?.level || 2)) + " " + mdRuns(b), "");
-    } else if (b.type === "bulletList" || b.type === "orderedList") { // rare/seeded simpler
-      lines.push(mdRuns(b), "");
+    } else if (b.type === "image") {
+      lines.push(`![${String(b.attrs?.alt || "image")}](${String(b.attrs?.src || "")})`, "");
+    } else if (b.type === "bulletList" || b.type === "orderedList") {
+      (b.content || []).filter((li) => li.type === "listItem").forEach((li, idx) => {
+        const txt = (li.content || []).filter((p) => p.type === "paragraph").map((p) => mdRuns(p)).join(" / ");
+        lines.push(b.type === "bulletList" ? "- " + txt : `${idx + 1}. ` + txt);
+      });
+      lines.push("");
     } else {
       if (b.attrs?.ai) { lines.push("> " + mdRuns(b), ""); return; }
       lines.push(mdRuns(b), "");
@@ -65,6 +71,7 @@ function esc(s: string) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").
 export function toWordHtml(title: string, docJson: Doc, opts: { hideAi: boolean; margins: MarginRow[]; footnotes: boolean }): string {
   const body = (docJson.content || []).map((b) => {
     if (opts.hideAi && b.attrs?.ai) return "";
+    if (b.type === "image") return `<p><img src="${esc(String(b.attrs?.src || ""))}" alt="${esc(String(b.attrs?.alt || "image"))}"/></p>`;
     const runs = (b.content || []).map((r) => {
       const t = esc(r.text ?? "");
       if (!t) return "";
