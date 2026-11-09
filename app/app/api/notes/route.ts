@@ -44,7 +44,9 @@ export async function POST(req: Request) {
   const id = uid();
   const now = Date.now();
   const doc = { type: "doc", content: [{ type: "paragraph", attrs: { id: `${id}-p1` } }] };
-  db.prepare("INSERT INTO notes VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)").run(
+  db.prepare(
+    `INSERT INTO notes(id,user_id,notebook_id,title,content_json,text,words,ai_words,mode,settings,private,pinned_visual,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+  ).run(
     id, user.id, n.id, "Untitled", JSON.stringify(doc), "", 0, 0,
     n.is_journal ? "ask" : "think",
     JSON.stringify({ pace: "slow", strictness: "balanced", margins: "single", focus: false, font: "serif", size: 2 }),

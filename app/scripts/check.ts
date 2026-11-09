@@ -142,4 +142,24 @@ const layoutSrc = fs.readFileSync(path.join(root, "app", "layout.tsx"), "utf8");
 const cssSrc = fs.readFileSync(path.join(root, "app", "globals.css"), "utf8");
 ok(layoutSrc.includes("Material+Symbols+Outlined") && cssSrc.includes("Material Symbols Outlined"), "ui: material symbols font loaded (layout + .msym)");
 
+// ---------- api: notes INSERT matches schema (drift-checkable against lib/db.ts without imports) ----------
+const routeSrc = fs.readFileSync(path.join(root, "app", "api", "notes", "route.ts"), "utf8");
+const insM = routeSrc.match(/INSERT INTO notes\(([^)]*)\)[\s\S]*?VALUES\((\?[^\n]*?)\)/);
+ok(!!insM, "api: notes route INSERT INTO notes(<cols>) VALUES(<phs>) present");
+if (insM) {
+  const dbSrc = fs.readFileSync(path.join(root, "lib", "db.ts"), "utf8");
+  const scM = dbSrc.match(/const SCHEMA = `([\s\S]*?)`;/);
+  ok(!!scM, "api: SCHEMA extractable from lib/db.ts");
+  if (scM) {
+    const { DatabaseSync } = await import("node:sqlite");
+    const mem = new DatabaseSync(":memory:");
+    mem.exec(scM[1]);
+    const tblCols = mem.prepare("PRAGMA table_info(notes)").all() as { name: string }[];
+    const insCols = insM[1].split(",").map((s) => s.trim());
+    const ph = insM[2].split(",").length;
+    ok(ph === insCols.length && insCols.every((c) => tblCols.map((t) => t.name).includes(c)) && ph === tblCols.length,
+      `api: notes INSERT (${insCols.length} cols, ${ph} ph) matches notes table (${tblCols.length} cols)`);
+  }
+}
+
 console.log(`\n${n} checks passed.`);
