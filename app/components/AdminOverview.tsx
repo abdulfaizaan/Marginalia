@@ -67,7 +67,7 @@ export default function AdminOverview() {
         })}
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_1.2fr]">
+      <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
         <div className="rounded-2xl border border-white/10 bg-white/[0.05] p-5">
           <div className="text-[14px] font-bold text-white">AI keys set</div>
           <p className="mt-1 text-[12.5px] text-white/55">{typeof m?.keyed === "number" && typeof m?.userCount === "number" ? `${m.keyed} of ${m.userCount} users bring their own key` : "…"}</p>

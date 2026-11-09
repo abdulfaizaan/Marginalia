@@ -87,7 +87,7 @@ export default function LibraryClient({ user, notebooks, notes, used, hasAi }: P
         )}
       </div>
 
-      <div className="mx-auto grid max-w-[1330px] gap-8 px-5 py-7 lg:grid-cols-[250px_1fr]">
+      <div className="mx-auto grid max-w-[1330px] gap-8 px-5 py-7 lg:grid-cols-[250px_minmax(0,1fr)]">
         {/* rail */}
         <aside>
           <div className="text-[11.5px] font-bold tracking-[0.14em] text-muted">LIBRARY</div>

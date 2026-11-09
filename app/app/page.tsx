@@ -46,7 +46,7 @@ export default function Landing() {
         <span className="mb-6 inline-flex items-center rounded-full bg-[var(--chip-dir-bg)] px-3 py-1 text-[12px] font-bold text-[var(--chip-dir-ink)]">
           Free. Bring your own AI key.
         </span>
-        <div className="grid items-center gap-12 lg:grid-cols-[1.15fr_0.85fr]">
+        <div className="grid items-center gap-12 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
           <div>
             <h1 className="font-serif text-[54px] font-medium leading-[1.04] tracking-tight text-ink">
               The notebook that thinks <span className="italic">with</span> you, not <span className="italic">for</span> you.

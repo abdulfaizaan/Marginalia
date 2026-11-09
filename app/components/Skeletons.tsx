@@ -26,7 +26,7 @@ export function LibrarySkeleton() {
           <div className="mg-skel h-10 w-24" />
         </div>
       </header>
-      <div className="mx-auto grid max-w-[1330px] gap-8 px-5 py-7 lg:grid-cols-[250px_1fr]">
+      <div className="mx-auto grid max-w-[1330px] gap-8 px-5 py-7 lg:grid-cols-[250px_minmax(0,1fr)]">
         <aside className="space-y-3">
           <Bars widths={["w-24 h-3"]} />
           <div className="space-y-2">
