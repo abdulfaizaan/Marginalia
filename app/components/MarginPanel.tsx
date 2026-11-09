@@ -31,6 +31,7 @@ export default function MarginPanel({ noteId, margins, setMargins, replyTo, setR
   const router = useRouter();
   const [reply, setReply] = useState("");
   const [sendErr, setSendErr] = useState<string | null>(null);
+  const [inlineResp, setInlineResp] = useState<{ user: string; assistant: string; kind: string; level: number; offline: boolean } | null>(null);
   const [busy, startBusy] = useTransition();
 
   function act(marginId: string, action: "rate" | "rate_down" | "dismiss" | "pin" | "unpin") {
@@ -64,6 +65,7 @@ export default function MarginPanel({ noteId, margins, setMargins, replyTo, setR
     if (!body) return;
     const to = replyTo;
     setReply("");
+    setInlineResp(null);
     if (to) {
       setReplyTo(null);
       startBusy(async () => {
@@ -79,12 +81,16 @@ export default function MarginPanel({ noteId, margins, setMargins, replyTo, setR
     } else {
       startBusy(async () => {
         try {
-          const r = await api<{ asked: { user: string; assistant: string; kind: string; level: number } }>(`/api/notes/${noteId}/margins`, {
+          const r = await api<{ asked?: { user: string; assistant: string; kind: string; level: number; provider?: string } }>(`/api/notes/${noteId}/margins`, {
             method: "POST", body: JSON.stringify({ action: "reply", body }),
           });
           if (r.asked) {
-            addAsk(r.asked.user, r.asked.assistant, r.asked.kind, r.asked.level);
-            goAsk();
+            const { user, assistant, kind, level, provider } = r.asked;
+            // answer appears WHERE the user typed (no silent rail switch); ask transcript stays in sync
+            setInlineResp({ user, assistant, kind, level, offline: /offline/.test(provider || "") });
+            addAsk(user, assistant, kind, level);
+          } else {
+            setInlineResp(null);
           }
         } catch (x: unknown) {
           setSendErr(x instanceof Error ? x.message : "Could not send."); setReply(body);
@@ -119,6 +125,18 @@ export default function MarginPanel({ noteId, margins, setMargins, replyTo, setR
 
       <div className="px-5 pb-5">
         {sendErr && <div className="mb-1.5 text-[12px] font-semibold text-amber-700">{sendErr}</div>}
+        {inlineResp && (
+          <div className="mb-2 rounded-xl border border-accent/40 bg-card p-3">
+            <div className="flex items-baseline gap-2">
+              <Chip kind={inlineResp.kind} small>{chipLabel(inlineResp.kind)}</Chip>
+              <button onClick={goAsk} className="ml-auto text-[11.5px] font-semibold text-accent hover:underline">Full conversation →</button>
+            </div>
+            <p className="mt-1.5 font-serif text-[14px] leading-relaxed text-ink">{inlineResp.assistant}</p>
+            {inlineResp.offline && (
+              <p className="mt-1.5 text-[11px] text-muted">Offline engine answered (AI busy just now) — ask again in a moment for a note-specific reply.</p>
+            )}
+          </div>
+        )}
         {replyTo && (
           <div className="mb-1.5 text-[12px] text-accent">
             Replying to note {visible.find((m) => m.id === replyTo)?.num ?? ""} ·{" "}

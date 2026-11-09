@@ -18,6 +18,7 @@ export default function AskPanel({ noteId, msgs, setMsgs, journal }: {
   const [answered, setAnswered] = useState(() => msgs.some((m) => m.kind === "answer"));
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [offlineHint, setOfflineHint] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -37,11 +38,12 @@ export default function AskPanel({ noteId, msgs, setMsgs, journal }: {
     if (!body.trim() || busy) return;
     setBusy(true); setErr(null);
     try {
-      const r = await api<{ body: string; kind: string; level?: number }>("/api/ai/ask", {
+      const r = await api<{ body: string; kind: string; level?: number; provider?: string }>("/api/ai/ask", {
         method: "POST",
         body: JSON.stringify({ noteId, kind: journal ? "journal" : "chat", message: body, hintLevel }),
       });
       push(body, r.body, r.kind, r.level || 0);
+      setOfflineHint(!journal && /offline/.test(r.provider || "") && r.provider !== "offline-care");
       if (r.kind === "answer") setAnswered(true);
       if (r.level) setLevel(r.level);
       router.refresh(); // keep server-rendered transcript in sync for reloads
@@ -97,6 +99,11 @@ export default function AskPanel({ noteId, msgs, setMsgs, journal }: {
       )}
 
       {err && <div className="mx-5 mb-2 rounded-lg bg-rose-50 px-3 py-2 text-[12.5px] font-semibold text-rose-800">{err}</div>}
+      {offlineHint && (
+        <div className="mx-5 mb-2 rounded-lg border border-line bg-card px-3 py-2 text-[11.5px] text-muted">
+          Offline engine answered (AI busy just now) — generic hint; ask again shortly for a full note-specific reply.
+        </div>
+      )}
 
       <form
         onSubmit={(e) => { e.preventDefault(); const t = text; setText(""); talk(t); }}
