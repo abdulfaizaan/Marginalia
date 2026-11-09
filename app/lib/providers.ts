@@ -6,7 +6,7 @@ import { thinkEvaluate, askRespond, journalRespond, validDraft, capWords, countW
 const VENDOR_DEFAULTS = {
   openai: { base: "https://api.openai.com/v1", model: "gpt-4o-mini" },
   xai:    { base: "https://api.x.ai/v1",      model: "grok-3-mini" },
-  gemini: { base: "https://generativelanguage.googleapis.com/v1beta", model: "gemini-flash-latest" }, // alias tracks the current flash; concrete names retire too fast (2.0-flash died Nov 2026)
+  gemini: { base: "https://generativelanguage.googleapis.com/v1beta", model: "gemini-flash-lite-latest" }, // small+fast for margin notes (PRD §11); probe: ~2.3s vs flagship alias 503/hang under free-tier congestion. Override via GEMINI_MODEL.
 } as const;
 
 export interface Rt { name: "openai" | "xai" | "gemini" | "custom"; base: string; key: string; model: string }
