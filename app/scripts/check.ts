@@ -178,4 +178,16 @@ if (insM) {
   }
 }
 
+// ---------- db: indexes exist on the hot query paths ----------
+const dbSrcI = fs.readFileSync(path.join(root, "lib", "db.ts"), "utf8");
+const scI = /const SCHEMA = `([\s\S]*?)`;\n/.exec(dbSrcI);
+if (scI) {
+  const { DatabaseSync } = await import("node:sqlite");
+  const memI = new DatabaseSync(":memory:");
+  memI.exec(scI[1]);
+  const idxs = (memI.prepare("SELECT name FROM sqlite_master WHERE type='index' AND name LIKE 'idx_%'").all() as { name: string }[]).map((r) => r.name);
+  for (const want of ["idx_notes_user", "idx_margins_note", "idx_versions_note", "idx_ask_note", "idx_sessions_user", "idx_margins_user", "idx_visuals_note"])
+    ok(idxs.includes(want), `db: index ${want} exists`);
+}
+
 console.log(`\n${n} checks passed.`);

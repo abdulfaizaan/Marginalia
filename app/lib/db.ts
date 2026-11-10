@@ -34,6 +34,13 @@ CREATE TABLE IF NOT EXISTS promo_codes(code TEXT PRIMARY KEY, total INT NOT NULL
 CREATE TABLE IF NOT EXISTS promo_redemptions(id TEXT PRIMARY KEY, user_id TEXT NOT NULL, code TEXT NOT NULL, redeemed_at INT NOT NULL);
 CREATE TABLE IF NOT EXISTS usage(month TEXT NOT NULL, user_id TEXT NOT NULL, margin INT NOT NULL DEFAULT 0, visuals INT NOT NULL DEFAULT 0, PRIMARY KEY(month, user_id));
 CREATE TABLE IF NOT EXISTS audit(id TEXT PRIMARY KEY, admin TEXT NOT NULL, action TEXT NOT NULL, detail TEXT NOT NULL DEFAULT '', created_at INT NOT NULL);
+CREATE INDEX IF NOT EXISTS idx_notes_user ON notes(user_id, updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_margins_note ON margins(note_id, num);
+CREATE INDEX IF NOT EXISTS idx_margins_user ON margins(user_id);
+CREATE INDEX IF NOT EXISTS idx_versions_note ON versions(note_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_ask_note ON ask_messages(note_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_visuals_note ON visuals(note_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
 `;
 // //: removed duplicated CREATE from earlier scratch — single SCHEMA above is canonical
 const DAY = 86_400_000;
