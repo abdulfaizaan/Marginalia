@@ -2,6 +2,7 @@ import { DatabaseSync } from "node:sqlite";
 import { randomUUID, scryptSync, randomBytes, timingSafeEqual } from "node:crypto";
 import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { CAPS } from "./plans.ts";
 
 // ---------- schema ----------
 const SCHEMA = `
@@ -214,6 +215,12 @@ export function deleteUserTree(database: DatabaseSync, userId: string): void {
   });
 }
 
+// boot-time retention sweep
+export function bootSweep(database: DatabaseSync): void {
+  database.exec("DELETE FROM sessions WHERE expires_at < " + Date.now());
+  if (CAPS.versionsDays > 0) database.exec("DELETE FROM versions WHERE created_at < " + (Date.now() - CAPS.versionsDays * 86_400_000));
+}
+
 /** node:sqlite rows come back with null prototypes — React server→client props reject them. */
 export function plainRows<T extends object>(rows: readonly T[]): T[] {
   return rows.map((r) => ({ ...r }));
@@ -229,6 +236,7 @@ function createDb(): DatabaseSync {
   migrate(db);
   const n = (db.prepare("SELECT COUNT(*) c FROM users").get() as { c: number }).c;
   if (n === 0) seedUsers(db);
+  bootSweep(db);
   return db;
 }
 

@@ -226,4 +226,17 @@ mdb.deleteUserTree(memD, tid);
 const countU = (t: string) => (memD.prepare(`SELECT COUNT(*) c FROM ${t}`).get() as { c: number }).c;
 ok(countU("users") === 0 && countU("notebooks") === 0, "db: deleteUserTree removes the user tree");
 
+// ---------- db: boot-time retention sweep (expired sessions + expired versions go even without a GET) ----------
+const memH = new (await import("node:sqlite")).DatabaseSync(":memory:");
+mdb.migrate(memH);
+const hy = uidT(), hn = uidT();
+memH.prepare("INSERT INTO users(id,email,password,name,joined_at,last_active) VALUES(?,?,?,'H',?,?)").run(hy, "h@x.io", "h", nowT, nowT);
+memH.prepare("INSERT INTO notes(id,user_id,notebook_id,title,created_at,updated_at) VALUES(?,?,0,'H',?,?)").run(hn, hy, nowT, nowT);
+memH.prepare("INSERT INTO sessions(token,user_id,created_at,expires_at) VALUES(?,?,?,?)").run("tok-old", hy, 0, nowT - 1000);
+memH.prepare("INSERT INTO sessions(token,user_id,created_at,expires_at) VALUES(?,?,?,?)").run("tok-live", hy, nowT, nowT + 86_400_000);
+memH.prepare("INSERT INTO versions(id,note_id,content_json,words,created_at) VALUES(?,?,?,0,?)").run(uidT(), hn, "{}", nowT - 40 * 86_400_000);
+mdb.bootSweep(memH);
+ok((memH.prepare("SELECT COUNT(*) c FROM sessions").get() as { c: number }).c === 1, "db: bootSweep removes expired sessions but keeps live ones");
+ok((memH.prepare("SELECT COUNT(*) c FROM versions").get() as { c: number }).c === 0, "db: bootSweep prunes over-retention versions");
+
 console.log(`\n${n} checks passed.`);
