@@ -190,4 +190,17 @@ if (scI) {
     ok(idxs.includes(want), `db: index ${want} exists`);
 }
 
+// ---------- db: migrate-on-boot mechanism ----------
+const mdb = await import("../lib/db.ts");
+const memM = new (await import("node:sqlite")).DatabaseSync(":memory:");
+mdb.migrate(memM);
+const mv = (memM.prepare("SELECT value FROM meta WHERE key='schema_version'").get() as { value: string } | undefined)?.value;
+ok(mv === String(mdb.SCHEMA_VERSION), "db: migrate stamps schema_version");
+mdb.migrate(memM); // second boot must be a no-op
+ok((memM.prepare("SELECT value FROM meta WHERE key='schema_version'").get() as { value: string }).value === mv, "db: migrate is idempotent on second boot");
+const memL = new (await import("node:sqlite")).DatabaseSync(":memory:");
+memL.exec("CREATE TABLE users(id TEXT PRIMARY KEY)"); // simulate a legacy DB
+mdb.migrate(memL);
+ok((memL.prepare("SELECT value FROM meta WHERE key='schema_version'").get() as { value: string }).value === String(mdb.SCHEMA_VERSION), "db: legacy DB gains version + full schema");
+
 console.log(`\n${n} checks passed.`);

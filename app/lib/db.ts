@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS promo_codes(code TEXT PRIMARY KEY, total INT NOT NULL
 CREATE TABLE IF NOT EXISTS promo_redemptions(id TEXT PRIMARY KEY, user_id TEXT NOT NULL, code TEXT NOT NULL, redeemed_at INT NOT NULL);
 CREATE TABLE IF NOT EXISTS usage(month TEXT NOT NULL, user_id TEXT NOT NULL, margin INT NOT NULL DEFAULT 0, visuals INT NOT NULL DEFAULT 0, PRIMARY KEY(month, user_id));
 CREATE TABLE IF NOT EXISTS audit(id TEXT PRIMARY KEY, admin TEXT NOT NULL, action TEXT NOT NULL, detail TEXT NOT NULL DEFAULT '', created_at INT NOT NULL);
+CREATE TABLE IF NOT EXISTS meta(key TEXT PRIMARY KEY, value TEXT NOT NULL);
 CREATE INDEX IF NOT EXISTS idx_notes_user ON notes(user_id, updated_at DESC);
 CREATE INDEX IF NOT EXISTS idx_margins_note ON margins(note_id, num);
 CREATE INDEX IF NOT EXISTS idx_margins_user ON margins(user_id);
@@ -173,6 +174,22 @@ export function monthKey(ts = Date.now()): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
+// ---------- migrations: SCHEMA is idempotent DDL applied on every boot; versioned steps go here ----------
+export const SCHEMA_VERSION = 1;
+// Future migrations: gate on the stored schema_version and append before the stamp (v2 = ...).
+const FUTURE_MIGRATIONS: { version: number; sql: string }[] = [];
+
+export function migrate(database: DatabaseSync): void {
+  database.exec(SCHEMA); // idempotent: tables + meta + indexes
+  let stored = 0;
+  const row = database.prepare("SELECT value FROM meta WHERE key='schema_version'").get() as { value: string } | undefined;
+  if (row) stored = parseInt(row.value, 10) || 0;
+  for (const m of FUTURE_MIGRATIONS) if (stored < m.version) database.exec(m.sql);
+  database.prepare(
+    "INSERT INTO meta(key,value) VALUES('schema_version',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value WHERE CAST(excluded.value AS INTEGER) > CAST(value AS INTEGER)"
+  ).run(String(SCHEMA_VERSION));
+}
+
 /** node:sqlite rows come back with null prototypes — React server→client props reject them. */
 export function plainRows<T extends object>(rows: readonly T[]): T[] {
   return rows.map((r) => ({ ...r }));
@@ -185,7 +202,7 @@ function createDb(): DatabaseSync {
     : file;
   mkdirSync(dirname(full), { recursive: true });
   const db = new DatabaseSync(full);
-  db.exec(SCHEMA);
+  migrate(db);
   const n = (db.prepare("SELECT COUNT(*) c FROM users").get() as { c: number }).c;
   if (n === 0) seedUsers(db);
   return db;
