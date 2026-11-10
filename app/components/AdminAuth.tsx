@@ -49,7 +49,7 @@ export default function AdminAuth() {
           maxLength={6}
           required
         />
-        <p className="mt-1.5 text-[12.5px] text-white/55">From your authenticator app. Demo code: 123456.</p>
+        <p className="mt-1.5 text-[12.5px] text-white/55">From your authenticator app. The code is set server-side in <code>ADMIN_CODE</code>.</p>
 
         {err && <div className="mt-4 rounded-lg border border-rose-400/30 bg-rose-500/10 px-3.5 py-2.5 text-[13.5px] font-semibold text-rose-200">{err}</div>}
         <button type="submit" disabled={busy} className="mt-6 w-full rounded-xl bg-white py-3 text-[15px] font-bold text-[#111111] hover:bg-white/90 disabled:opacity-60">

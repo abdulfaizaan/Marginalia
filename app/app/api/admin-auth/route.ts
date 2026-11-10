@@ -1,7 +1,11 @@
 import { db, uid, checkPassword } from "@/lib/db";
 import { createSession, setSessionCookie } from "@/lib/auth";
 
-const CODE = () => process.env.ADMIN_CODE || "123456";
+const CODE = () => {
+  const c = process.env.ADMIN_CODE;
+  if (!c) throw new Error("ADMIN_CODE must be set — admin sign-in refuses to run with an unset verification code.");
+  return c;
+};
 
 export async function POST(req: Request) {
   const { email, password, code } = await req.json() as { email: string; password: string; code: string };
