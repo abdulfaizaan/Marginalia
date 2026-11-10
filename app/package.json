@@ -24,6 +24,7 @@
     "@types/node": "^24.19.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "autocannon": "^9.0.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

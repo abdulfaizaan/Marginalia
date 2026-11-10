@@ -1,6 +1,6 @@
 // Runnable check: node scripts/check.ts (per ponytail AGENTS.md — one assert script, no frameworks)
 // Exit 0 = all pass; first failure stops with FAIL + message.
-import { capWords, validDraft, askRespond, journalRespond, WORD_CAP, countWords } from "../lib/engine.ts";
+import { capWords, validDraft, askRespond, journalRespond, thinkEvaluate, WORD_CAP, countWords } from "../lib/engine.ts";
 import { parsePair, buildVisual, type VisualSpec } from "../lib/visualize.ts";
 import { toMarkdown, toWordHtml, toPrintHtml, type Doc } from "../lib/exporters.ts";
 import type { MarginRow } from "../lib/db.ts";
@@ -250,6 +250,36 @@ const { createLimiter } = await import("../lib/ratelimit.ts");
   ok(rl("ip-b") === true, "ratelimit: keys do not interfere");
   now += 61_000;
   ok(rl("ip-a") === true, "ratelimit: window expires and admits again");
+}
+
+// ---------- engine: thinkEvaluate silence rule, pace limits, changed-only, dismissal memory ----------
+const tb = (i: number) => ({ id: "b" + i, text: "The greedy rule orders items by value to weight and stops when the next item does not fit, which can lose value." });
+{
+  const all3 = [0, 1, 2].map(tb);
+  ok(thinkEvaluate({ blocks: all3, changedIds: ["b0", "b1", "b2"], pace: "frequent", dismissed: [], noteWords: 100 }).length === 3, "think: frequent pace yields up to 3 notes");
+  ok(thinkEvaluate({ blocks: all3, changedIds: ["b0", "b1", "b2"], pace: "slow", dismissed: [], noteWords: 100 }).length === 1, "think: slow pace yields exactly 1 note");
+  ok(thinkEvaluate({ blocks: all3, changedIds: ["b0", "b1", "b2"], pace: "normal", dismissed: [], noteWords: 5 }).length === 0, "think: near-empty note stays silent");
+  const onlyChanged = thinkEvaluate({ blocks: all3, changedIds: ["b2"], pace: "normal", dismissed: [], noteWords: 100 });
+  ok(onlyChanged.length > 0 && onlyChanged.every((n) => n.anchor === "b2"), "think: only changed blocks are evaluated");
+  const first = thinkEvaluate({ blocks: [tb(0)], changedIds: ["b0"], pace: "normal", dismissed: [], noteWords: 100 })[0];
+  ok(!!first, "think: baseline note produced");
+  const again = thinkEvaluate({ blocks: [tb(0)], changedIds: ["b0"], pace: "normal", dismissed: [first.body], noteWords: 100 }).map((x) => x.body);
+  ok(!again.includes(first.body), "think: dismissed body is silenced on re-evaluate");
+}
+
+// ---------- providers: model-output fallbacks ---------- 
+{
+  const realFetch = globalThis.fetch;
+  try {
+    const prov = await import("../lib/providers.ts");
+    const cfg = { vendor: "gemini", model: "m", base: "https://vendor.invalid/v1", key: "k" };
+    globalThis.fetch = (async () => { throw new Error("network down"); }) as typeof fetch;
+    const r1 = await prov.marginNotes({ blocks: [{ id: "p1", text: "everyone always says dp tables overfit the original thesis completely here" }], changedIds: ["p1"], pace: "normal", dismissed: [], noteWords: 100 }, cfg as never);
+    ok(r1.provider.includes("offline") && r1.notes.length > 0 && r1.notes.every(validDraft), "providers: fetch failure → offline fallback with valid drafts");
+    globalThis.fetch = (async () => ({ ok: true, status: 200, headers: new Headers(), json: async () => ({ candidates: [{ content: { parts: [{ text: '{"body":"the complete worked answer written out","kind":"answer","level":4}' }] } }] }) })) as unknown as typeof fetch;
+    const r2 = await prov.askAI({ kind: "chat", noteText: "x", history: [], userMessage: "give me the full answer", hintLevel: 3, strictness: "strict" }, cfg as never);
+    ok(r2.provider.includes("gate") && r2.kind === "hint", "providers: strict gate vetoes model 'answer' — hint only, flagged provider");
+  } finally { globalThis.fetch = realFetch; }
 }
 
 console.log(`\n${n} checks passed.`);
