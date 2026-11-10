@@ -305,4 +305,9 @@ ok(bare.length === 0, `parity: every component with api() calls has catch covera
 const edSrc = fs.readFileSync(path.join(root, "components", "Editor.tsx"), "utf8");
 ok(/beforeunload/.test(edSrc) && /visibilitychange/.test(edSrc) && /flushPending/.test(edSrc) && /texts\.current = blkMap\(editorRef\.current \|\| ed\)/.test(edSrc), "editor: pending saves flush on leave; texts snapshot at send-time not post-await");
 
+// ---------- a11y: labels, real checkbox — drift pin ----------
+ok(/htmlFor="adm-email"/.test(comps("AdminAuth.tsx")) && /htmlFor="adm-pw"/.test(comps("AdminAuth.tsx")) && /htmlFor="adm-code"/.test(comps("AdminAuth.tsx")), "a11y: admin sign-in labels are associated with their inputs");
+ok(/<input[^>]*type="checkbox" checked=\{on\}/.test(comps("ui.tsx")) && comps("ui.tsx").includes('aria-hidden="true"'), "a11y: Checkbox is a real keyboard-operable input (visuals aria-hidden)");
+ok(/aria-label="Note title"/.test(comps("Editor.tsx")) && /aria-label=\{journal/.test(comps("AskPanel.tsx")) && /aria-label/.test(comps("MarginPanel.tsx")), "a11y: bare editor/ask/margin inputs carry accessible names");
+
 console.log(`\n${n} checks passed.`);

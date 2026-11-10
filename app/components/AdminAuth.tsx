@@ -34,14 +34,15 @@ export default function AdminAuth() {
         <h1 className="font-serif text-[32px] font-medium text-white">Admin console</h1>
         <p className="mt-2 text-[14px] leading-relaxed text-white/70">For the Marginalia team only. Every sign-in needs a verification code.</p>
 
-        <label className="mt-6 block text-[13.5px] font-semibold text-white/90">Work email</label>
-        <input className={inputCls + " mt-1.5 border-white/15 bg-white/[0.05] text-white placeholder:text-white/35"} value={email} onChange={(e) => setEmail(e.target.value)} type="email" required />
+        <label htmlFor="adm-email" className="mt-6 block text-[13.5px] font-semibold text-white/90">Work email</label>
+        <input id="adm-email" className={inputCls + " mt-1.5 border-white/15 bg-white/[0.05] text-white placeholder:text-white/35"} value={email} onChange={(e) => setEmail(e.target.value)} type="email" required />
 
-        <label className="mt-5 block text-[13.5px] font-semibold text-white/90">Password</label>
-        <input className={inputCls + " mt-1.5 border-white/15 bg-white/[0.05] text-white"} value={pw} onChange={(e) => setPw(e.target.value)} type="password" required />
+        <label htmlFor="adm-pw" className="mt-5 block text-[13.5px] font-semibold text-white/90">Password</label>
+        <input id="adm-pw" className={inputCls + " mt-1.5 border-white/15 bg-white/[0.05] text-white"} value={pw} onChange={(e) => setPw(e.target.value)} type="password" required />
 
-        <label className="mt-5 block text-[13.5px] font-semibold text-white/90">Verification code</label>
+        <label htmlFor="adm-code" className="mt-5 block text-[13.5px] font-semibold text-white/90">Verification code</label>
         <input
+          id="adm-code"
           className={inputCls + " mt-1.5 border-white/15 bg-white/[0.05] font-mono tracking-[0.35em] text-white"}
           value={code}
           onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}

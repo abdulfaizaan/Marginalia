@@ -325,6 +325,7 @@ export default function Editor({ note, margins0, ask0, visuals, notebooks }: Pro
             </>
           )}
           <input
+            aria-label="Note title"
             className="min-w-0 flex-1 bg-transparent font-serif text-[20px] font-semibold text-ink outline-none"
             value={title}
             onChange={(e) => {

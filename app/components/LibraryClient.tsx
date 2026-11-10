@@ -62,7 +62,7 @@ export default function LibraryClient({ user, notebooks, notes, used }: Props) {
         <div className="mx-auto flex h-16 max-w-[1330px] items-center gap-4 px-5">
           <Link href="/notes"><Logo /></Link>
           <div className="mx-auto w-full max-w-[440px]">
-            <input className={inputCls + " h-10"} placeholder="Search notes, tags and notebooks" value={q} onChange={(e) => setQ(e.target.value)} />
+            <input className={inputCls + " h-10"} placeholder="Search notes, tags and notebooks" aria-label="Search notes, tags and notebooks" value={q} onChange={(e) => setQ(e.target.value)} />
           </div>
           <div className="flex items-center gap-2.5">
             <Link href="/account" className={btnGhost}>Settings</Link>

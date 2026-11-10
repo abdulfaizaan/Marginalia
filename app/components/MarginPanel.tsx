@@ -151,6 +151,7 @@ export default function MarginPanel({ noteId, margins, setMargins, replyTo, setR
         )}
         <form onSubmit={send}>
           <input
+            aria-label={replyTo ? "Answer this margin note" : "Ask about a line, or answer a note"}
             className={inputCls + " py-2.5 text-[13.5px]"}
             placeholder={replyTo ? "Answer this note…" : "Ask about a line, or answer a note"}
             value={reply}

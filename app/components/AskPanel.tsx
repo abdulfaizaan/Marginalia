@@ -110,6 +110,7 @@ export default function AskPanel({ noteId, msgs, setMsgs, journal }: {
         className="px-5 pb-5"
       >
         <input
+          aria-label={journal ? "Ask for a perspective" : "Ask for a hint"}
           className={inputCls + " py-2.5 text-[13.5px]"}
           placeholder={journal ? "Ask for a perspective…" : "Stuck? Ask for a hint"}
           value={text}

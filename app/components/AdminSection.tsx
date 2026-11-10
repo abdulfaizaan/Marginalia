@@ -56,7 +56,7 @@ function Users() {
             <button key={f} onClick={() => setFilter(f)} className={`h-8 rounded-[8px] px-3 text-[12.5px] font-bold ${filter === f ? "bg-white/15 text-white" : "text-white/60"}`}>{f}</button>
           ))}
         </div>
-        <input className={inputCls + " h-9 !w-[220px] border-white/15 bg-white/[0.06] text-white placeholder:text-white/35"} placeholder="Search email…" value={q} onChange={(e) => setQ(e.target.value)} />
+        <input className={inputCls + " h-9 !w-[220px] border-white/15 bg-white/[0.06] text-white placeholder:text-white/35"} placeholder="Search email…" aria-label="Search users by email" value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
       {err && <p className="mt-3 text-[13px] text-rose-300">{err}</p>}
 

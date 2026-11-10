@@ -129,9 +129,12 @@ export function Toggle({ on, onChange, label, sub }: { on: boolean; onChange: (v
 
 export function Checkbox({ on, onChange, label, sub }: { on: boolean; onChange: (v: boolean) => void; label: string; sub?: string }) {
   return (
-    <label className="flex cursor-pointer items-start gap-3" onClick={() => onChange(!on)}>
+    <label className="flex cursor-pointer items-start gap-3">
+      {/* real checkbox keeps keyboard space-toggle and screen-reader state; visuals are a peer-disclosed twin */}
+      <input type="checkbox" checked={on} onChange={(e) => onChange(e.target.checked)} className="sr-only peer" />
       <span
-        className={`mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-[5px] border ${on ? "border-accent bg-accent" : "border-muted bg-card"}`}
+        aria-hidden="true"
+        className={`peer mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-[5px] border ${on ? "border-accent bg-accent" : "border-muted bg-card"} peer-focus-visible:ring-2 peer-focus-visible:ring-accent/60`}
       >
         {on && (
           <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
