@@ -43,9 +43,17 @@ export default function OptionsClient({ noteId, settings, versions, retentionDay
     ? `/api/notes/${noteId}/export?fmt=print&ai=${hideAi ? "hide" : "include"}&foot=${foot ? 1 : 0}`
     : `/api/notes/${noteId}/export?fmt=${fmt}&ai=${hideAi ? "hide" : "include"}&foot=${foot ? 1 : 0}`;
 
+  const [restoreErr, setRestoreErr] = useState<string | null>(null);
+
   async function restore(versionId: string) {
-    await api(`/api/notes/${noteId}/versions`, { method: "POST", body: JSON.stringify({ versionId }) });
-    router.push(`/notes/${noteId}`);
+    // destructive-feeling action: the current state is snapshotted server-side first, but warn anyway
+    if (!confirm("Restore this version? The current text is saved into history first, but this replaces what's on the note.")) return;
+    try {
+      await api(`/api/notes/${noteId}/versions`, { method: "POST", body: JSON.stringify({ versionId }) });
+      router.push(`/notes/${noteId}`);
+    } catch (x: unknown) {
+      setRestoreErr(x instanceof Error ? x.message : "Could not restore this version. Try again.");
+    }
   }
 
   return (
@@ -185,6 +193,7 @@ export default function OptionsClient({ noteId, settings, versions, retentionDay
               </div>
             ))}
             {!versions.length && <p className="py-3 text-[13.5px] text-muted">Snapshots appear as the note is saved over time.</p>}
+            {restoreErr && <p className="py-2 text-[13px] font-semibold text-amber-700">{restoreErr}</p>}
           </div>
         </Card>
       </main>

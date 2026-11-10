@@ -35,6 +35,7 @@ export default function MarginPanel({ noteId, margins, setMargins, replyTo, setR
   const [busy, startBusy] = useTransition();
 
   function act(marginId: string, action: "rate" | "rate_down" | "dismiss" | "pin" | "unpin") {
+    const snapshot = margins; // rollback source if the request fails
     setMargins((ms) =>
       ms.map((m) =>
         m.id === marginId
@@ -47,10 +48,15 @@ export default function MarginPanel({ noteId, margins, setMargins, replyTo, setR
       )
     );
     startBusy(async () => {
-      await api(`/api/notes/${noteId}/margins`, {
-        method: "POST",
-        body: JSON.stringify(action.startsWith("rate") ? { action: "rate", marginId, rating: action === "rate" ? 1 : -1 } : { action, marginId }),
-      });
+      try {
+        await api(`/api/notes/${noteId}/margins`, {
+          method: "POST",
+          body: JSON.stringify(action.startsWith("rate") ? { action: "rate", marginId, rating: action === "rate" ? 1 : -1 } : { action, marginId }),
+        });
+      } catch (x: unknown) {
+        setMargins(snapshot); // optimistic rollback
+        setSendErr(x instanceof Error ? x.message : "Could not update the margin. Try again.");
+      }
     });
   }
 
@@ -163,6 +169,7 @@ function MarginCard({ m, noteId, act, busy, setReplyTo, replyTo, setMargins, rou
   setMargins: Dispatch<SetStateAction<MarginRowLite[]>>; router: ReturnType<typeof useRouter>;
 }) {
   const [conv, setConv] = useState(false);
+  const [convErr, setConvErr] = useState<string | null>(null);
   const gridSel = /([A-Za-z]{2,6})\s+against\s+([A-Za-z]{2,6})/.exec(m.body)?.[0] || "";
 
   async function convert() {
@@ -174,6 +181,8 @@ function MarginCard({ m, noteId, act, busy, setReplyTo, replyTo, setMargins, rou
       setMargins((ms) => ms.filter((x) => x.id !== m.id));
       window.dispatchEvent(new CustomEvent("mg-doc-replace", { detail: r.doc }));
       router.refresh();
+    } catch (x: unknown) {
+      setConvErr(x instanceof Error ? x.message : "Could not convert this margin into text.");
     } finally { setConv(false); }
   }
 
@@ -185,6 +194,7 @@ function MarginCard({ m, noteId, act, busy, setReplyTo, replyTo, setMargins, rou
         {m.status === "pinned" && <span className="ml-auto text-[11px] font-semibold text-accent">Pinned</span>}
       </div>
       <p className="mt-2 font-serif text-[14.5px] leading-relaxed text-ink">{m.body}</p>
+      {convErr && <p className="mt-1.5 text-[12px] font-semibold text-amber-700">{convErr}</p>}
       {m.reply && (
         <div className="mt-2 space-y-1 border-t border-line pt-2">
           {m.reply.split("\n").map((line, i) => (

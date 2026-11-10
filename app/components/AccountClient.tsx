@@ -36,8 +36,12 @@ export default function AccountClient({ user, used, caps }: Props) {
   }
 
   async function signOut() {
-    await api("/api/auth", { method: "POST", body: JSON.stringify({ action: "signout" }) });
-    router.push("/");
+    try {
+      await api("/api/auth", { method: "POST", body: JSON.stringify({ action: "signout" }) });
+      router.push("/");
+    } catch (x: unknown) {
+      setMsg(x instanceof Error ? x.message : "Could not sign out. Try again.");
+    }
   }
 
   function toggleTheme(mode: "light" | "dark") {

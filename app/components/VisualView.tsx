@@ -21,6 +21,7 @@ export default function VisualView({ noteId, noteTitle, visuals0, ask0 }: {
     visuals0[0] ? visuals0[0] : null
   );
   const [creating, setCreating] = useState(false);
+  const [pinning, setPinning] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [stepIdx, setStepIdx] = useState<number>(0);
   const router = useRouter();
@@ -55,9 +56,15 @@ export default function VisualView({ noteId, noteTitle, visuals0, ask0 }: {
   }, [selParam]);
 
   async function pin() {
-    if (!selected) return;
-    await api("/api/ai/visual", { method: "POST", body: JSON.stringify({ noteId, action: "pin", visualId: selected.id }) });
-    router.push(`/notes/${noteId}`);
+    if (!selected || pinning) return;
+    setPinning(true);
+    try {
+      await api("/api/ai/visual", { method: "POST", body: JSON.stringify({ noteId, action: "pin", visualId: selected.id }) });
+      router.push(`/notes/${noteId}`);
+    } catch (x: unknown) {
+      setErr(x instanceof Error ? x.message : "Could not pin the visual.");
+      setPinning(false);
+    }
   }
 
   const steps = spec?.steps || [];

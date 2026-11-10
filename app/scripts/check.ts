@@ -286,4 +286,19 @@ const tb = (i: number) => ({ id: "b" + i, text: "The greedy rule orders items by
 const clientSrc2 = fs.readFileSync(path.join(root, "lib", "client.ts"), "utf8");
 ok(/if \(res\.status === 401[\s\S]*?sign-in/.test(clientSrc2) && clientSrc2.indexOf("res.status === 401") < clientSrc2.indexOf("throw new Error"), "client: api() redirects expired sessions to /sign-in before failing");
 
+// ---------- ui: fetch-call parity — confirms, rollbacks, catches (grep-shaped source pins) ----------
+const comps = (name: string) => fs.readFileSync(path.join(root, "components", name), "utf8");
+ok(comps("OptionsClient.tsx").includes("confirm(") && comps("OptionsClient.tsx").includes("setRestoreErr"), "parity: version restore confirms before POST and surfaces errors");
+ok(comps("AdminSection.tsx").includes("confirm(") && comps("AdminSection.tsx").indexOf("confirm(") < comps("AdminSection.tsx").indexOf("complete_deletion"), "parity: admin complete_deletion confirms before POST");
+ok(comps("MarginPanel.tsx").includes("setMargins(snapshot)"), "parity: MarginPanel.act rolls back optimistic updates on failure");
+const bare = ["Editor.tsx", "MarginPanel.tsx", "VisualView.tsx", "OptionsClient.tsx", "AccountClient.tsx", "LibraryClient.tsx", "SideRail.tsx", "AdminOverview.tsx", "AdminSection.tsx", "AskPanel.tsx", "AuthForm.tsx", "AdminAuth.tsx"]
+  .filter((f) => {
+    const src = comps(f);
+    // every api( call must live inside some catch-bearing block: a file using api() has ≥1 catch for each startBusy/send function — approximate honest rule: counts match
+    const calls = (src.match(/await api[<(]/g) || []).length;
+    const catches = (src.match(/catch/g) || []).length;
+    return calls > catches;
+  });
+ok(bare.length === 0, `parity: every component with api() calls has catch coverage (bare: ${bare.join(", ") || "none"})`);
+
 console.log(`\n${n} checks passed.`);

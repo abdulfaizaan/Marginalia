@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/client";
 import { btnGhost } from "@/components/ui";
@@ -11,11 +11,16 @@ import type { NotebookLite, VisualLite } from "./types";
 export default function SideRail({ noteId, notebooks, visuals }: { noteId: string; notebooks: NotebookLite[]; visuals: VisualLite[] }) {
   const router = useRouter();
   const [busy, startBusy] = useTransition();
+  const [err, setErr] = useState<string | null>(null);
 
   function newNote() {
     startBusy(async () => {
-      const r = await api<{ id: string }>("/api/notes", { method: "POST", body: JSON.stringify({}) });
-      router.push(`/notes/${r.id}`);
+      try {
+        const r = await api<{ id: string }>("/api/notes", { method: "POST", body: JSON.stringify({}) });
+        router.push(`/notes/${r.id}`);
+      } catch (x: unknown) {
+        setErr(x instanceof Error ? x.message : "Could not create the note. Try again.");
+      }
     });
   }
 
@@ -28,6 +33,7 @@ export default function SideRail({ noteId, notebooks, visuals }: { noteId: strin
       <Link href="/notes" className="text-[13.5px] font-semibold text-ink-soft hover:text-ink">← Library<LinkHint /></Link>
 
       <button onClick={newNote} disabled={busy} className={btnGhost + " w-full text-[13.5px]" + (busy ? " busy-pulse" : "")}>+ New note</button>
+      {err && <p className="text-[12px] font-semibold text-amber-700">{err}</p>}
 
       <div>
         <div className="mb-1.5 text-[11px] font-bold tracking-[0.14em] text-muted">NOTEBOOKS</div>

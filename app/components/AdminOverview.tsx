@@ -30,8 +30,14 @@ export default function AdminOverview() {
   }, []);
 
   async function review(id: string, decision: "flag_ok" | "resolved") {
-    await api("/api/admin/ai-quality", { method: "POST", body: JSON.stringify({ action: "review", id, decision }) });
-    setFlagged((q) => q.filter((f) => f.id !== id));
+    const prev = flagged;
+    setFlagged((q) => q.filter((f) => f.id !== id)); // optimistic: drop the row immediately
+    try {
+      await api("/api/admin/ai-quality", { method: "POST", body: JSON.stringify({ action: "review", id, decision }) });
+    } catch (x: unknown) {
+      setFlagged(prev); // rollback
+      setErr(x instanceof Error ? x.message : "Could not record the review.");
+    }
   }
 
   const notesWritten = m?.notesWritten as { value: string; target: string; onTarget: boolean } | undefined;

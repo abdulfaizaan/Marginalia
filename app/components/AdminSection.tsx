@@ -37,8 +37,14 @@ function Users() {
   }, [filter, q]);
 
   async function completeDeletion(userId: string) {
-    await api("/api/admin/users", { method: "POST", body: JSON.stringify({ action: "complete_deletion", userId }) });
-    setRows((rs) => rs.filter((r) => r.id !== userId));
+    // irreversible: erases the user's whole tree
+    if (!confirm("Permanently delete this user and all their notes? This cannot be undone.")) return;
+    try {
+      await api("/api/admin/users", { method: "POST", body: JSON.stringify({ action: "complete_deletion", userId }) });
+      setRows((rs) => rs.filter((r) => r.id !== userId));
+    } catch (x: unknown) {
+      setErr(x instanceof Error ? x.message : "Could not complete deletion.");
+    }
   }
 
   return (
@@ -106,8 +112,14 @@ function Quality() {
   useEffect(() => { void load(); }, []);
 
   async function review(id: string, decision: "flag_ok" | "resolved") {
-    await api("/api/admin/ai-quality", { method: "POST", body: JSON.stringify({ action: "review", id, decision }) });
-    setQueue((q0) => q0.filter((x) => x.id !== id));
+    const prev = queue;
+    setQueue((q0) => q0.filter((x) => x.id !== id)); // optimistic: drop the row immediately
+    try {
+      await api("/api/admin/ai-quality", { method: "POST", body: JSON.stringify({ action: "review", id, decision }) });
+    } catch (x: unknown) {
+      setQueue(prev); // rollback
+      setErr(x instanceof Error ? x.message : "Could not record the review.");
+    }
   }
 
   return (

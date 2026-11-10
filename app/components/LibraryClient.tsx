@@ -27,6 +27,7 @@ export default function LibraryClient({ user, notebooks, notes, used }: Props) {
   const [nbFilter, setNbFilter] = useState<string | null>(null);
   const [sort, setSort] = useState<"recent" | "az">("recent");
   const [busy, startBusy] = useTransition();
+  const [err, setErr] = useState<string | null>(null);
 
   // SP1: single fair-use tier (caps live in CAPS)
   const tier = { label: "Free", notesMonth: CAPS.notesMonth };
@@ -46,8 +47,12 @@ export default function LibraryClient({ user, notebooks, notes, used }: Props) {
 
   function newNote() {
     startBusy(async () => {
-      const r = await api<{ id: string }>("/api/notes", { method: "POST", body: JSON.stringify(nbFilter ? { notebookId: nbFilter } : {}) });
-      router.push(`/notes/${r.id}`);
+      try {
+        const r = await api<{ id: string }>("/api/notes", { method: "POST", body: JSON.stringify(nbFilter ? { notebookId: nbFilter } : {}) });
+        router.push(`/notes/${r.id}`);
+      } catch (x: unknown) {
+        setErr(x instanceof Error ? x.message : "Could not create the note. Try again.");
+      }
     });
   }
 
@@ -65,6 +70,7 @@ export default function LibraryClient({ user, notebooks, notes, used }: Props) {
           </div>
         </div>
       </header>
+      {err && <div className="border-b border-line bg-amber-50 px-5 py-2 text-center text-[13px] font-semibold text-amber-700">{err}</div>}
 
       <div className="mx-auto grid max-w-[1330px] gap-8 px-5 py-7 lg:grid-cols-[250px_minmax(0,1fr)]">
         {/* rail */}
