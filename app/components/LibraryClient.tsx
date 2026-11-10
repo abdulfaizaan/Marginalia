@@ -17,7 +17,6 @@ interface Props {
   notebooks: { id: string; name: string; is_journal: number }[];
   notes: LibNote[];
   used: { margin: number; visuals: number };
-  hasAi: boolean;
 }
 
 export default function LibraryClient({ user, notebooks, notes, used }: Props) {

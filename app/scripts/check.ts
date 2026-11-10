@@ -310,4 +310,10 @@ ok(/htmlFor="adm-email"/.test(comps("AdminAuth.tsx")) && /htmlFor="adm-pw"/.test
 ok(/<input[^>]*type="checkbox" checked=\{on\}/.test(comps("ui.tsx")) && comps("ui.tsx").includes('aria-hidden="true"'), "a11y: Checkbox is a real keyboard-operable input (visuals aria-hidden)");
 ok(/aria-label="Note title"/.test(comps("Editor.tsx")) && /aria-label=\{journal/.test(comps("AskPanel.tsx")) && /aria-label/.test(comps("MarginPanel.tsx")), "a11y: bare editor/ask/margin inputs carry accessible names");
 
+// ---------- dead code: sweep pins (drift = fail) ----------
+ok(!/void [a-zA-Z]+;/.test(fs.readFileSync(path.join(root, "lib", "exporters.ts"), "utf8")) && !/void [a-zA-Z]+;/.test(fs.readFileSync(path.join(root, "app", "api", "auth", "route.ts"), "utf8")), "deadcode: no void-import ceremony in exporters/auth route");
+ok(!/hasAi/.test(fs.readFileSync(path.join(root, "components", "AccountClient.tsx"), "utf8")) && !/hasAi/.test(fs.readFileSync(path.join(root, "components", "LibraryClient.tsx"), "utf8")), "deadcode: dead hasAi prop removed");
+ok(!/href="#"/.test(fs.readFileSync(path.join(root, "components", "AuthForm.tsx"), "utf8")) && !/href="#"/.test(fs.readFileSync(path.join(root, "app", "page.tsx"), "utf8")), "deadcode: no href=\"#\" placeholder links");
+ok(!/r\.capped/.test(fs.readFileSync(path.join(root, "components", "Editor.tsx"), "utf8")), "deadcode: unreachable r.capped branch removed (api() throws on 429 — the catch carries the cap message)");
+
 console.log(`\n${n} checks passed.`);

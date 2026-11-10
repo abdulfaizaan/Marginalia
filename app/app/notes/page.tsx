@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { getSessionUser } from "@/lib/auth";
-import { db, parseSettings, monthKey, plainRows, userAiConfig } from "@/lib/db";
+import { db, monthKey, plainRows } from "@/lib/db";
 import LibraryClient, { type LibNote } from "@/components/LibraryClient";
 import RouteFx from "@/components/RouteFx";
 import { LibrarySkeleton } from "@/components/Skeletons";
@@ -36,12 +36,10 @@ async function Library() {
     pinned: pinnedSet.has(n.id),
   }));
   const u = db.prepare("SELECT margin,visuals FROM usage WHERE month=? AND user_id=?").get(monthKey(), user.id) as { margin: number; visuals: number } | undefined;
-  void parseSettings;
   return (
     <RouteFx>
       <LibraryClient
         user={{ name: user.name, email: user.email }}
-        hasAi={!!userAiConfig(user.id)?.key}
         notebooks={notebooks}
         notes={notes}
         used={{ margin: u?.margin ?? 0, visuals: u?.visuals ?? 0 }}

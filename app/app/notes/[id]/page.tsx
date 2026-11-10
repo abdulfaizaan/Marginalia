@@ -32,7 +32,6 @@ async function Note({ id: paramsId }: { id: Promise<{ id: string }> }) {
   const visuals = plainRows(db.prepare("SELECT * FROM visuals WHERE note_id=? ORDER BY created_at DESC").all(id) as { id: string; spec: string; created_at: number }[]);
   const notebooks = plainRows(db.prepare("SELECT id,name,is_journal FROM notebooks WHERE user_id=? ORDER BY position").all(user.id) as { id: string; name: string; is_journal: number }[]);
   const nb = db.prepare("SELECT name FROM notebooks WHERE id=?").get(note.notebook_id) as { name: string } | undefined;
-  void parseSettings;
   const s = parseSettings(note.settings);
   return (
     <RouteFx>

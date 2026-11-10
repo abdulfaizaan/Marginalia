@@ -11,7 +11,6 @@ interface Props {
   user: { email: string; name: string; status: string };
   used: { margin: number; visuals: number };
   caps: { margin: number; visuals: number };
-  hasAi: boolean;
 }
 
 export default function AccountClient({ user, used, caps }: Props) {

@@ -36,7 +36,7 @@ function mdRuns(b: TNode): string {
 export function toMarkdown(title: string, docJson: Doc, opts: { hideAi: boolean; margins: MarginRow[]; footnotes: boolean }): string {
   const lines: string[] = ["# " + title, ""];
   const fns: string[] = [];
-  (docJson.content || []).forEach((b, i) => {
+  (docJson.content || []).forEach((b) => {
     if (opts.hideAi && b.attrs?.ai) return;
     if (b.type === "codeBlock") {
       lines.push("```", b.content?.map((r) => r.text).join("") || "", "```", "");
@@ -59,7 +59,6 @@ export function toMarkdown(title: string, docJson: Doc, opts: { hideAi: boolean;
         if (anchors.length) lines[lines.length - 2] += " " + anchors.map((m) => `[^note-${m.num}]`).join(" ");
       }
     }
-    void i;
   });
   if (opts.footnotes && fns.length) lines.push("", "---", ...fns);
   return lines.join("\n").replace(/\n{3,}/g, "\n\n").trim() + "\n";

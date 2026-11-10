@@ -1,4 +1,4 @@
-import { db, uid, DAY, hashPassword, checkPassword } from "@/lib/db";
+import { db, uid, hashPassword, checkPassword } from "@/lib/db";
 import { createSession, setSessionCookie, clearSessionCookie } from "@/lib/auth";
 
 export async function POST(req: Request) {
@@ -41,6 +41,5 @@ export async function POST(req: Request) {
   if (!u || !checkPassword(password, u.password)) return Response.json({ error: "Email or password is incorrect." }, { status: 401 });
   db.prepare("UPDATE users SET last_active=? WHERE id=?").run(Date.now(), u.id);
   const token = await createSession(u.id);
-  void DAY;
   return setSessionCookie(Response.json({ ok: true, role: u.role }), token);
 }

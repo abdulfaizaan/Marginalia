@@ -96,7 +96,7 @@ export default function AuthForm() {
             <Field label="Email">
               <input className={inputCls} type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
             </Field>
-            <Field label="Password" right={mode === "signin" && <a href="#" className="text-[12.5px] font-semibold text-accent hover:underline">Forgot password?</a>}>
+            <Field label="Password">{/* password reset isn't built yet — add the link the day the endpoint lands */}
               <input className={inputCls} type="password" required value={pw} onChange={(e) => setPw(e.target.value)} placeholder={mode === "signup" ? "At least 8 characters" : "Your password"} />
             </Field>
             {mode === "signup" && (

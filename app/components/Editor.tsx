@@ -161,11 +161,10 @@ export default function Editor({ note, margins0, ask0, visuals, notebooks }: Pro
     const changedIds = blocks.filter((b) => texts.current.get(b.id) !== b.text).map((b) => b.id);
     if (!changedIds.length) return;
     try {
-      const r = await api<{ notes?: MarginRowLite[]; capped?: boolean; error?: string }>(`/api/notes/${note.id}/margins`, {
+      const r = await api<{ notes?: MarginRowLite[] }>(`/api/notes/${note.id}/margins`, {
         method: "POST",
         body: JSON.stringify({ action: "evaluate", blocks, changedIds, pace: paceRef.current }),
       });
-      if (r.capped) { setCapped(r.error || "Your monthly margin notes are used up."); return; }
       if (r.notes?.length) setMargins((ms) => [...ms, ...r.notes!]);
     } catch (x: unknown) {
       // api() throws on 429 with the server's cap message — surface it in the margin rail

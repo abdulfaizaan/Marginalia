@@ -30,9 +30,7 @@ export async function POST(req: Request) {
 
   if (b.kind !== "chat" && b.kind !== "probe") return jsonError(400, "Unknown kind.");
   if (!noteText) return jsonError(400, "Note missing.");
-  const focusOff = true; // Ask mode is explicit in both modes (PRD AK-*); focus mode silences proactive only
-  void focusOff;
-  const hist = (db.prepare("SELECT role,body FROM ask_messages WHERE note_id=? ORDER BY created_at DESC LIMIT 6").all(noteId) as { role: string; body: string }[]).reverse().map((r) => ({ role: r.role as "user" | "assistant", body: r.body }));
+  const hist =(db.prepare("SELECT role,body FROM ask_messages WHERE note_id=? ORDER BY created_at DESC LIMIT 6").all(noteId) as { role: string; body: string }[]).reverse().map((r) => ({ role: r.role as "user" | "assistant", body: r.body }));
   const level = Math.max(1, Math.min(3, b.hintLevel || 1));
   // strictness lives on the note and belongs to everyone now (SP1)
   let strictness: "strict" | "balanced" | "direct" = "balanced";

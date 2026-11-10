@@ -122,8 +122,9 @@ export default function Landing() {
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 text-[13px] text-muted">
           <span>Marginalia. Think with it, not through it.</span>
           <div className="flex gap-5">
-            <a href="#" className="hover:text-ink">Privacy</a>
-            <a href="#" className="hover:text-ink">Terms</a>
+            {/* real Privacy/Terms pages pending — plain text until then, no fake links */}
+            <span className="opacity-60">Privacy</span>
+            <span className="opacity-60">Terms</span>
             <Link href="/sign-in" className="hover:text-ink">Sign in</Link>
           </div>
         </div>
