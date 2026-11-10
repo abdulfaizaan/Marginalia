@@ -127,9 +127,10 @@ export default function Editor({ note, margins0, ask0, visuals, notebooks }: Pro
   // leave-safety: debounced timers die with the component — flush what's pending first.
   useEffect(() => {
     const flushPending = () => {
+      const hadPending = !!saveT.current;
       if (saveT.current) { clearTimeout(saveT.current); saveT.current = null; }
       if (thinkT.current) { clearTimeout(thinkT.current); thinkT.current = null; }
-      if (editorRef.current) doSave(editorRef.current);
+      if (hadPending && editorRef.current) doSave(editorRef.current);
     };
     const onBeforeUnload = () => flushPending();
     const onVisibility = () => { if (document.visibilityState === "hidden") flushPending(); };
