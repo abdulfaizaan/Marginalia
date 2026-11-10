@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { getSessionUser, jsonError } from "@/lib/auth";
-import { toMarkdown, toWordHtml, toPrintHtml, type Doc } from "@/lib/exporters";
+import { toMarkdown, toWordHtml, toPrintHtml, PRINT_CSP, type Doc } from "@/lib/exporters";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -27,7 +27,8 @@ export async function GET(req: Request, ctx: Ctx) {
   }
   if (fmt === "print" || fmt === "pdf") {
     const html = toPrintHtml(title, JSON.parse(note.content_json) as Doc, { hideAi, margins, footnotes });
-    return new Response(html, { headers: { "content-type": "text/html; charset=utf-8" } });
+    // sandbox in depth: the only inline script is hash-pinned by PRINT_CSP, so injected markup cannot execute
+    return new Response(html, { headers: { "content-type": "text/html; charset=utf-8", "content-security-policy": PRINT_CSP, "content-disposition": `inline; filename="${fileBase}.html"` } });
   }
   const html = toWordHtml(title, JSON.parse(note.content_json) as Doc, { hideAi, margins, footnotes });
   return new Response(html, { headers: { "content-type": "application/msword", "content-disposition": `attachment; filename="${fileBase}.doc"` } });

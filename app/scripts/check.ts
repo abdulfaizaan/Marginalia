@@ -2,7 +2,7 @@
 // Exit 0 = all pass; first failure stops with FAIL + message.
 import { capWords, validDraft, askRespond, journalRespond, WORD_CAP, countWords } from "../lib/engine.ts";
 import { parsePair, buildVisual, type VisualSpec } from "../lib/visualize.ts";
-import { toMarkdown, toPrintHtml, type Doc } from "../lib/exporters.ts";
+import { toMarkdown, toWordHtml, toPrintHtml, type Doc } from "../lib/exporters.ts";
 import type { MarginRow } from "../lib/db.ts";
 
 let n = 0;
@@ -90,6 +90,17 @@ ok(!hidden.includes("AI (question)") && hidden.includes("My own idea stands."), 
 const shown = toMarkdown("T", doc, { hideAi: false, margins: [], footnotes: false });
 ok(shown.includes("AI (question)") ? shown.includes("What if the opposite held?") : false, "md keeps AI text when not hidden");
 ok(toPrintHtml("T", doc, { hideAi: false, margins: [], footnotes: false }).includes("window.print()"), "print HTML auto-opens print dialog");
+
+// ---------- exporters: attribute escaping (no executable attribute injection in HTML exports) ----------
+const xssDoc: Doc = {
+  type: "doc",
+  content: [
+    { type: "image", attrs: { src: `x" onerror="alert(1)`, alt: `<y" onmouseover="alert(2)` } },
+  ],
+};
+const wordXss = toWordHtml("T", xssDoc, { hideAi: false, margins: [], footnotes: false });
+ok(!/onerror="/.test(wordXss) && !/onmouseover="/.test(wordXss), "word HTML: image attr injection cannot form event handlers");
+ok(!/onerror="/.test(toPrintHtml("T", xssDoc, { hideAi: false, margins: [], footnotes: false })), "print HTML: image attr injection cannot form event handlers");
 
 // ---------- central AI key: env-derived config (fail closed) ----------
 const { userAiConfig } = await import("../lib/db.ts");

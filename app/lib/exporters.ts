@@ -65,7 +65,7 @@ export function toMarkdown(title: string, docJson: Doc, opts: { hideAi: boolean;
   return lines.join("\n").replace(/\n{3,}/g, "\n\n").trim() + "\n";
 }
 
-function esc(s: string) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+function esc(s: string) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"); }
 
 /** Word-compatible HTML (opens in Word/Google Docs). ponytail: upgrade path = docx lib for real .docx. */
 export function toWordHtml(title: string, docJson: Doc, opts: { hideAi: boolean; margins: MarginRow[]; footnotes: boolean }): string {
@@ -94,9 +94,12 @@ ${body}${fns}
 </body></html>`;
 }
 
-/** Print-friendly HTML for the browser-print PDF route (browser saves as PDF). */
+/** Print-friendly HTML for the browser-print PDF route (browser saves as PDF).
+ *  Auto-print runs from one hash-pinned inline script, so the route's CSP can deny every other source (sandbox in depth). */
+export const PRINT_CSP = "default-src 'none'; style-src 'unsafe-inline'; img-src * data:; script-src 'sha256-fqHSqjhW23E2S+2okoLQJgqx61AEBdVb6z+4iv1h2+E='";
+
 export function toPrintHtml(title: string, docJson: Doc, opts: { hideAi: boolean; margins: MarginRow[]; footnotes: boolean }): string {
   return toWordHtml(title, docJson, opts)
     .replace("font-size:12pt", "font-size:12pt;background:white;color:#111")
-    .replace("<body", "<body onload=\"window.print()\"");
+    .replace("</body>", "<script>window.addEventListener(\"load\",()=>{window.print()});</script></body>");
 }
