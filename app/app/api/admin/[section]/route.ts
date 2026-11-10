@@ -17,10 +17,16 @@ export async function GET(req: Request, ctx: Ctx) {
   }
   if (section === "users") {
     const q = (url.searchParams.get("q") || "").toLowerCase().trim();
-    // central key: every user runs on the app's AI; pills are All|Demo → no per-user split anymore
-    let rows = db.prepare("SELECT id,email,name,joined_at,last_active,status FROM users WHERE role!='admin' ORDER BY joined_at").all() as any[];
-    if (q) rows = rows.filter((r) => r.email.toLowerCase().includes(q));
-    return Response.json({ users: rows });
+    const plan = url.searchParams.get("plan") === "demo" ? "demo" : "all";
+    const page = Math.max(0, parseInt(url.searchParams.get("page") || "0", 10) || 0);
+    // central key: every user runs on the app's AI; the toggle splits seeded demo accounts from real ones
+    const where = ["role!='admin'"];
+    const args: (string | number)[] = [];
+    if (q) { where.push("email LIKE ?"); args.push(`%${q}%`); }
+    if (plan === "demo") { where.push("email LIKE '%@example.com'"); }
+    const rows = db.prepare(`SELECT id,email,name,joined_at,last_active,status FROM users WHERE ${where.join(" AND ")} ORDER BY joined_at LIMIT 100 OFFSET ?`).all(...args, page * 100) as any[];
+    const total = (db.prepare(`SELECT COUNT(*) c FROM users WHERE ${where.join(" AND ")}`).get(...args) as { c: number }).c;
+    return Response.json({ users: rows, total, page, plan });
   }
   if (section === "ai-quality") {
     // user text stays hidden: reviewers see the AI note only

@@ -23,6 +23,7 @@ export async function POST(req: Request) {
   }
   const email = (b.email || "").trim().toLowerCase();
   const password = b.password || "";
+  if (password.length > 128) return Response.json({ error: "Password is too long (128 characters maximum)." }, { status: 400 });
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return Response.json({ error: "That email does not look right." }, { status: 400 });
   if (password.length < 8) return Response.json({ error: "Password needs at least 8 characters." }, { status: 400 });
   if (b.action === "signup") {

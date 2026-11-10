@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import AdminShell from "@/components/AdminShell";
 import { Chip, btnMini, inputCls } from "@/components/ui";
 import { api, timeAgo } from "@/lib/client";
@@ -21,14 +21,20 @@ function Users() {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const loadSeq = useRef(0);
 
   async function load() {
+    const me = ++loadSeq.current;
     try {
-      const r = await api<{ users: URow[] }>(`/api/admin/users?plan=${encodeURIComponent(filter)}&q=${encodeURIComponent(q)}`);
-      setRows(r.users);
+      const r = await api<{ users: URow[] }>(`/api/admin/users?plan=${encodeURIComponent(filter === "Demo" ? "demo" : "all")}&q=${encodeURIComponent(q)}`);
+      if (me === loadSeq.current) setRows(r.users); // ignore stale responses (last-load-wins)
     } catch (x: unknown) { setErr(x instanceof Error ? x.message : "Load failed."); }
   }
-  useEffect(() => { void load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [filter, q]);
+  useEffect(() => {
+    const t = setTimeout(() => { void load(); }, 250); // debounce keystrokes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => clearTimeout(t);
+  }, [filter, q]);
 
   async function completeDeletion(userId: string) {
     await api("/api/admin/users", { method: "POST", body: JSON.stringify({ action: "complete_deletion", userId }) });

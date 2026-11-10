@@ -40,8 +40,19 @@ export async function POST(req: Request, ctx: Ctx) {
     const u = usageGet(user.id);
     if (u.margin >= tier.notesMonth)
       return Response.json({ capped: true, error: "You have used your free monthly margin limit — it resets next month." }, { status: 429 });
-    const blocks = (b.blocks || []).slice(0, 400).map((x) => ({ id: String(x.id).slice(0, 64), text: String(x.text || "").slice(0, 4000) }));
+    const all = (b.blocks || []).slice(0, 400).map((x) => ({ id: String(x.id).slice(0, 64), text: String(x.text || "").slice(0, 4000) }));
     const changedIds = (b.changedIds || []).slice(0, 40).map(String);
+    // forward only changed blocks plus a short tail for context — bounds the per-call vendor payload
+    const changed = all.filter((x) => changedIds.includes(x.id));
+    const fwd: typeof changed = [];
+    const seen = new Set<string>();
+    for (const x of [...changed, ...all.slice(-10)]) {
+      if (seen.has(x.id)) continue;
+      seen.add(x.id);
+      fwd.push(x);
+      if (fwd.length >= 40) break;
+    }
+    const blocks = fwd;
     const dismissed = (db.prepare("SELECT body FROM margins WHERE note_id=? AND status IN ('dismissed','thread')").all(id) as { body: string }[]).map((r) => r.body);
     const pace = (b.pace || "slow") as "slow" | "normal" | "frequent";
     const cfg = userAiConfig(user.id);

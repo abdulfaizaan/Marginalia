@@ -233,6 +233,9 @@ function createDb(): DatabaseSync {
     : file;
   mkdirSync(dirname(full), { recursive: true });
   const db = new DatabaseSync(full);
+  // WAL + busy-timeout: multi-process access (next build page-data workers, any replica) without "database is locked"
+  db.exec("PRAGMA journal_mode=WAL;");
+  db.exec("PRAGMA busy_timeout=5000;");
   migrate(db);
   const n = (db.prepare("SELECT COUNT(*) c FROM users").get() as { c: number }).c;
   if (n === 0) seedUsers(db);

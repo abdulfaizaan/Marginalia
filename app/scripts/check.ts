@@ -239,4 +239,17 @@ mdb.bootSweep(memH);
 ok((memH.prepare("SELECT COUNT(*) c FROM sessions").get() as { c: number }).c === 1, "db: bootSweep removes expired sessions but keeps live ones");
 ok((memH.prepare("SELECT COUNT(*) c FROM versions").get() as { c: number }).c === 0, "db: bootSweep prunes over-retention versions");
 
+// ---------- rate limiting: sliding-window bucket (auth + AI burst cap) ----------
+const { createLimiter } = await import("../lib/ratelimit.ts");
+{
+  let now = Date.now();
+  const rl = createLimiter({ max: 5, windowMs: 60_000, now: () => now });
+  let passes = 0;
+  for (let i = 0; i < 7; i++) if (rl("ip-a")) passes++;
+  ok(passes === 5, "ratelimit: allows max then denies the rest of the window");
+  ok(rl("ip-b") === true, "ratelimit: keys do not interfere");
+  now += 61_000;
+  ok(rl("ip-a") === true, "ratelimit: window expires and admits again");
+}
+
 console.log(`\n${n} checks passed.`);

@@ -57,7 +57,8 @@ export async function marginNotes(req: MarginRequest, keyCfg: Kc = null): Promis
       .filter((n: MarginDraft) => req.blocks.some((b) => b.id === n.anchor));
     if (!notes.length) return { notes: offline().filter(validDraft), provider: route.name + "+offline" };
     return { notes: notes.slice(0, 3), provider: route.name };
-  } catch {
+  } catch (e) {
+    console.error("[provider]", route.name, "marginNotes fell back to offline:", e instanceof Error ? e.message : e);
     return { notes: offline().filter(validDraft), provider: route.name + "+offline" };
   }
 }
@@ -84,7 +85,8 @@ export async function askAI(inp: AskInput, keyCfg: Kc = null): Promise<(AskResp 
     const gate = askRespond({ ...inp, userMessage: "Just give me the full answer", hintLevel: Math.max(inp.hintLevel, 3) });
     if (gate.kind !== "answer") return { ...gate, provider: route.name + "+gate" };
     return { body, kind: "answer", level: 4, provider: route.name };
-  } catch {
+  } catch (e) {
+    console.error("[provider]", route.name, "askAI fell back to offline:", e instanceof Error ? e.message : e);
     return { ...askRespond(inp), provider: route.name + "+offline" };
   }
 }
@@ -102,8 +104,8 @@ export function journalAI(entry: string, userMessage?: string): JournalResp & { 
 const CHAT_TIMEOUT_MS = 25_000;
 async function chat(route: { name: string; base: string; key: string; model: string }, sys: string, user: string): Promise<string> {
   if (route.name === "gemini") {
-    const res = await fetch(`${route.base}/models/${route.model}:generateContent?key=${route.key}`, {
-      method: "POST", headers: { "content-type": "application/json" },
+    const res = await fetch(`${route.base}/models/${route.model}:generateContent`, {
+      method: "POST", headers: { "content-type": "application/json", "x-goog-api-key": route.key },
       body: JSON.stringify({
         system_instruction: { parts: [{ text: sys }] },
         contents: [{ role: "user", parts: [{ text: user }] }],
