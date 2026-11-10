@@ -1,4 +1,4 @@
-import { db, uid } from "@/lib/db";
+import { db, deleteUserTree } from "@/lib/db";
 import { getSessionUser, jsonError } from "@/lib/auth";
 import { metrics, auditLog } from "@/lib/admin";
 
@@ -50,12 +50,9 @@ export async function POST(req: Request, ctx: Ctx) {
   }
   if (b.action === "complete_deletion") {
     if (!b.userId) return jsonError(400, "Missing user id.");
-    const u = db.prepare("SELECT id,email,status FROM users WHERE id=?").get(b.userId) as { id: string; email: string; status: string } | undefined;
+    const u = db.prepare("SELECT id,email FROM users WHERE id=?").get(b.userId) as { id: string; email: string } | undefined;
     if (!u) return jsonError(404, "User not found.");
-    const ids = (db.prepare("SELECT id FROM notes WHERE user_id=?").all(u.id) as { id: string }[]).map((r) => r.id);
-    for (const id of ids) for (const t of ["margins", "ask_messages", "visuals", "versions"]) db.prepare(`DELETE FROM ${t} WHERE note_id=?`).run(id);
-    for (const t of ["notes", "notebooks", "sessions", "promo_redemptions", "usage"]) db.prepare(`DELETE FROM ${t} WHERE user_id=?`).run(u.id);
-    db.prepare("DELETE FROM users WHERE id=?").run(u.id);
+    deleteUserTree(db, u.id);
     auditLog(user.email, "Account deletion completed", u.email);
     return Response.json({ ok: true });
   }

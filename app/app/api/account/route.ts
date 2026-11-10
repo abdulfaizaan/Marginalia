@@ -1,4 +1,4 @@
-import { db } from "@/lib/db";
+import { db, deleteUserTree } from "@/lib/db";
 import { getSessionUser, jsonError, clearSessionCookie } from "@/lib/auth";
 
 // GET — full account data export (AB-4)
@@ -38,10 +38,7 @@ export async function POST(req: Request) {
   }
   if (b.action === "delete_sure") {
     // full wipe now (migration path: 30-day scheduled purge on request)
-    const ids = (db.prepare("SELECT id FROM notes WHERE user_id=?").all(user.id) as { id: string }[]).map((r) => r.id);
-    for (const id of ids) for (const t of ["margins", "ask_messages", "visuals", "versions"]) db.prepare(`DELETE FROM ${t} WHERE note_id=?`).run(id);
-    for (const t of ["notes", "notebooks", "sessions", "promo_redemptions", "usage"]) db.prepare(`DELETE FROM ${t} WHERE ${t === "usage" ? "user_id" : "user_id"}=?`).run(user.id);
-    db.prepare("DELETE FROM users WHERE id=?").run(user.id);
+    deleteUserTree(db, user.id);
     return clearSessionCookie(Response.json({ ok: true }));
   }
   return jsonError(400, "Unknown action.");

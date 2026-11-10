@@ -1,4 +1,4 @@
-import { db, uid, parseSettings } from "@/lib/db";
+import { db, uid, parseSettings, deleteNoteTree } from "@/lib/db";
 import { getSessionUser, jsonError } from "@/lib/auth";
 import { userWordsInDoc, type Doc } from "@/lib/exporters";
 
@@ -60,6 +60,6 @@ export async function DELETE(req: Request, ctx: Ctx) {
   const { id } = await ctx.params;
   const note = db.prepare("SELECT id FROM notes WHERE id=? AND user_id=?").get(id, user.id);
   if (!note) return jsonError(404, "Not found.");
-  for (const q of ["DELETE FROM margins WHERE note_id=?", "DELETE FROM ask_messages WHERE note_id=?", "DELETE FROM visuals WHERE note_id=?", "DELETE FROM versions WHERE note_id=?", "DELETE FROM notes WHERE id=?"]) db.prepare(q).run(id);
+  deleteNoteTree(db, id);
   return Response.json({ ok: true });
 }

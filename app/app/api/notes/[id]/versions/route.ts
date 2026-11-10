@@ -1,4 +1,4 @@
-import { db, uid, parseSettings } from "@/lib/db";
+import { db, uid, transact } from "@/lib/db";
 import { getSessionUser, jsonError } from "@/lib/auth";
 import { CAPS } from "@/lib/plans";
 import { userWordsInDoc, plainText, type Doc } from "@/lib/exporters";
@@ -31,14 +31,14 @@ export async function POST(req: Request, ctx: Ctx) {
   const v = db.prepare("SELECT * FROM versions WHERE id=? AND note_id=?").get(versionId, id) as any;
   if (!v) return jsonError(404, "Version not found.");
 
-  // snapshot current, then restore
-  db.prepare("INSERT INTO versions(id,note_id,content_json,words,created_at) VALUES(?,?,?,?,?)")
-    .run(uid(), id, note.content_json, note.words, Date.now());
+  // snapshot current, then restore — one transaction so the note is never left half-restored
   const doc = JSON.parse(v.content_json as string) as Doc;
-  const text = plainText(doc);
-  const uw = userWordsInDoc(doc);
-  db.prepare("UPDATE notes SET content_json=?, text=?, words=?, ai_words=?, updated_at=? WHERE id=?")
-    .run(v.content_json, text, uw, Math.max(0, text.trim().split(/\s+/).filter(Boolean).length - uw), Date.now(), id);
-  void parseSettings;
-  return Response.json({ ok: true, doc });
-}
+  transact(db, () => {
+    db.prepare("INSERT INTO versions(id,note_id,content_json,words,created_at) VALUES(?,?,?,?,?)")
+      .run(uid(), id, note.content_json, note.words, Date.now());
+    const text = plainText(doc);
+    const uw = userWordsInDoc(doc);
+    db.prepare("UPDATE notes SET content_json=?, text=?, words=?, ai_words=?, updated_at=? WHERE id=?")
+      .run(v.content_json, text, uw, Math.max(0, text.trim().split(/\s+/).filter(Boolean).length - uw), Date.now(), id);
+  });
+  return Response.json({ ok: true, doc });}

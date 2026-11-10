@@ -1,4 +1,4 @@
-import { db, uid, parseSettings, userAiConfig } from "@/lib/db";
+import { db, uid, parseSettings, userAiConfig, transact } from "@/lib/db";
 import { getSessionUser, jsonError } from "@/lib/auth";
 import { marginNotes } from "@/lib/providers";
 import { CAPS } from "@/lib/plans";
@@ -47,13 +47,15 @@ export async function POST(req: Request, ctx: Ctx) {
     const cfg = userAiConfig(user.id);
     const res = await marginNotes({ blocks, changedIds, pace, dismissed, noteWords: note.words as number }, cfg);
     const created: unknown[] = [];
-    for (const d of res.notes) {
-      const mid = uid();
-      db.prepare("INSERT INTO margins(id,note_id,user_id,anchor,num,type,body,status,level,want_visual,created_at,orig_created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)")
-        .run(mid, id, user.id, d.anchor, nextNum(), d.type, capWords(d.body), "open", 1, d.wantVisual ? 1 : 0, Date.now(), Date.now());
-      usageIncr(user.id, "margin");
-      created.push(db.prepare("SELECT * FROM margins WHERE id=?").get(mid));
-    }
+    transact(db, () => {
+      for (const d of res.notes) {
+        const mid = uid();
+        db.prepare("INSERT INTO margins(id,note_id,user_id,anchor,num,type,body,status,level,want_visual,created_at,orig_created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)")
+          .run(mid, id, user.id, d.anchor, nextNum(), d.type, capWords(d.body), "open", 1, d.wantVisual ? 1 : 0, Date.now(), Date.now());
+        usageIncr(user.id, "margin");
+        created.push(db.prepare("SELECT * FROM margins WHERE id=?").get(mid));
+      }
+    });
     return Response.json({ notes: created.reverse(), provider: res.provider, capped: false });
   }
 

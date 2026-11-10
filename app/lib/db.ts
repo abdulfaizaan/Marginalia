@@ -190,6 +190,30 @@ export function migrate(database: DatabaseSync): void {
   ).run(String(SCHEMA_VERSION));
 }
 
+// ---------- transactional cascade deletes: ONE implementation for every route (no half-erased trees) ----------
+export function transact(database: DatabaseSync, fn: () => void): void {
+  database.exec("BEGIN");
+  try { fn(); database.exec("COMMIT"); }
+  catch (e) { database.exec("ROLLBACK"); throw e; }
+}
+
+export function deleteNoteTree(database: DatabaseSync, noteId: string): void {
+  transact(database, () => {
+    for (const t of ["margins", "ask_messages", "visuals", "versions"]) database.prepare(`DELETE FROM ${t} WHERE note_id=?`).run(noteId);
+    database.prepare("DELETE FROM notes WHERE id=?").run(noteId);
+  });
+}
+
+export function deleteUserTree(database: DatabaseSync, userId: string): void {
+  transact(database, () => {
+    for (const id of (database.prepare("SELECT id FROM notes WHERE user_id=?").all(userId) as { id: string }[])) {
+      for (const t of ["margins", "ask_messages", "visuals", "versions"]) database.prepare(`DELETE FROM ${t} WHERE note_id=?`).run(id.id);
+    }
+    for (const t of ["notes", "notebooks", "sessions", "promo_redemptions", "usage"]) database.prepare(`DELETE FROM ${t} WHERE user_id=?`).run(userId);
+    database.prepare("DELETE FROM users WHERE id=?").run(userId);
+  });
+}
+
 /** node:sqlite rows come back with null prototypes — React server→client props reject them. */
 export function plainRows<T extends object>(rows: readonly T[]): T[] {
   return rows.map((r) => ({ ...r }));

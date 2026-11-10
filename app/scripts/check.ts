@@ -203,4 +203,27 @@ memL.exec("CREATE TABLE users(id TEXT PRIMARY KEY)"); // simulate a legacy DB
 mdb.migrate(memL);
 ok((memL.prepare("SELECT value FROM meta WHERE key='schema_version'").get() as { value: string }).value === String(mdb.SCHEMA_VERSION), "db: legacy DB gains version + full schema");
 
+// ---------- db: transactional cascade deletes (single implementation for all Hurtado routes) ----------
+const memD = new (await import("node:sqlite")).DatabaseSync(":memory:");
+mdb.migrate(memD);
+const uidT = () => crypto.randomUUID();
+const nowT = Date.now();
+const tid = uidT(), tnb = uidT(), tnote = uidT();
+memD.prepare("INSERT INTO users(id,email,password,name,joined_at,last_active) VALUES(?,?,?,'A',?,?)").run(tid, "t@x.io", "h", nowT, nowT);
+memD.prepare("INSERT INTO notebooks(id,user_id,name) VALUES(?,?,?)").run(tnb, tid, "N");
+memD.prepare("INSERT INTO notes(id,user_id,notebook_id,title,created_at,updated_at) VALUES(?,?,?,'T',?,?)").run(tnote, tid, tnb, nowT, nowT);
+memD.prepare("INSERT INTO margins(id,note_id,user_id,num,type,body,created_at) VALUES(?,?,?,1,'question','b',?)").run(uidT(), tnote, tid, nowT);
+memD.prepare("INSERT INTO ask_messages(id,note_id,user_id,role,body,created_at) VALUES(?,?,?,?,?,?)").run(uidT(), tnote, tid, "user", "q", nowT);
+memD.prepare("INSERT INTO visuals(id,note_id,user_id,spec,created_at) VALUES(?,?,?,'{}',?)").run(uidT(), tnote, tid, nowT);
+memD.prepare("INSERT INTO versions(id,note_id,content_json,words,created_at) VALUES(?,?,?,0,?)").run(uidT(), tnote, "{}", nowT);
+mdb.deleteNoteTree(memD, tnote);
+ok(((memD.prepare("SELECT COUNT(*) c FROM notes").get() as { c: number }).c) === 0
+  && (memD.prepare("SELECT COUNT(*) c FROM margins").get() as { c: number }).c === 0
+  && (memD.prepare("SELECT COUNT(*) c FROM ask_messages").get() as { c: number }).c === 0
+  && (memD.prepare("SELECT COUNT(*) c FROM visuals").get() as { c: number }).c === 0
+  && (memD.prepare("SELECT COUNT(*) c FROM versions").get() as { c: number }).c === 0, "db: deleteNoteTree removes the note and all children");
+mdb.deleteUserTree(memD, tid);
+const countU = (t: string) => (memD.prepare(`SELECT COUNT(*) c FROM ${t}`).get() as { c: number }).c;
+ok(countU("users") === 0 && countU("notebooks") === 0, "db: deleteUserTree removes the user tree");
+
 console.log(`\n${n} checks passed.`);
