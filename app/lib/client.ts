@@ -2,6 +2,11 @@
 
 export async function api<T = unknown>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, { headers: { "content-type": "application/json" }, ...init });
+  if (res.status === 401 && typeof window !== "undefined" && !path.startsWith("/api/auth")) {
+    // expired session → sign-in once, centrally, instead of every caller failing silently
+    window.location.href = "/sign-in";
+    throw new Error("Session expired — redirecting to sign-in.");
+  }
   const data = (await res.json().catch(() => ({}))) as T & { error?: string };
   if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
   return data;

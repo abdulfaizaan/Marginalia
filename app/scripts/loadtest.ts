@@ -30,7 +30,7 @@ async function post(name: string, path: string, body: unknown) {
   return res;
 }
 
-async function run(name: string, opts: Record<string, string>, url: string, method = "GET") {
+async function run(name: string, opts: Partial<autocannon.Options>, url: string, method: autocannon.Options["method"] = "GET") {
   const r = await autocannon({ url: BASE + url, method, connections: 20, duration: 5, ...opts });
   const stats = { rps: r.requests.average, p50: r.latency.p50, p99: r.latency.p99, non2xx: r.non2xx, errors: r.errors };
   console.log(`result ${name}: ${stats.rps} req/s | p50 ${stats.p50}ms | p99 ${stats.p99}ms | non2xx ${stats.non2xx} | errors ${stats.errors}`);

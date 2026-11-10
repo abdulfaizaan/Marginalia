@@ -282,4 +282,8 @@ const tb = (i: number) => ({ id: "b" + i, text: "The greedy rule orders items by
   } finally { globalThis.fetch = realFetch; }
 }
 
+// ---------- client: global 401 handling (expired session → sign-in, never silent loss) ----------
+const clientSrc2 = fs.readFileSync(path.join(root, "lib", "client.ts"), "utf8");
+ok(/if \(res\.status === 401[\s\S]*?sign-in/.test(clientSrc2) && clientSrc2.indexOf("res.status === 401") < clientSrc2.indexOf("throw new Error"), "client: api() redirects expired sessions to /sign-in before failing");
+
 console.log(`\n${n} checks passed.`);
