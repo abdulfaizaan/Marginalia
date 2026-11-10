@@ -20,7 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{if(JSON.parse(localStorage.getItem('mg-theme')||'null')==='dark')document.documentElement.classList.add('dark');}catch(e){}`,
+            __html: `try{if(localStorage.getItem('mg-theme')==='dark')document.documentElement.classList.add('dark');}catch(e){}`,
           }}
         />
         {children}

@@ -145,6 +145,19 @@ const layoutSrc = fs.readFileSync(path.join(root, "app", "layout.tsx"), "utf8");
 const cssSrc = fs.readFileSync(path.join(root, "app", "globals.css"), "utf8");
 ok(layoutSrc.includes("Material+Symbols+Outlined") && cssSrc.includes("Material Symbols Outlined"), "ui: material symbols font loaded (layout + .msym)");
 
+// ---------- theme restore: the inline reader must parse exactly what the saver writes (plain string) ----------
+const clientSrcT = fs.readFileSync(path.join(root, "lib", "client.ts"), "utf8");
+const layoutSrcT = fs.readFileSync(path.join(root, "app", "layout.tsx"), "utf8");
+const savedTheme = /localStorage\.setItem\("mg-theme",/.test(clientSrcT);
+const inline = /__html: `([^`]+)`/.exec(layoutSrcT)?.[1] || "";
+const readExpr = /try\{if\((.*?)\)document/.exec(inline)?.[1] || "";
+const themeEv = (val: string | null) => {
+  try { return eval(readExpr.replace("localStorage.getItem('mg-theme')", JSON.stringify(val))) === true; } catch { return false; }
+};
+ok(savedTheme && readExpr.length > 0, "theme: saver and inline reader both present");
+ok(themeEv("dark"), "theme: saved 'dark' string survives the inline-restoring parse");
+ok(!themeEv(null), "theme: absent theme does not accidentally enable dark");
+
 // ---------- api: notes INSERT matches schema (drift-checkable against lib/db.ts without imports) ----------
 const routeSrc = fs.readFileSync(path.join(root, "app", "api", "notes", "route.ts"), "utf8");
 const insM = routeSrc.match(/INSERT INTO notes\(([^)]*)\)[\s\S]*?VALUES\((\?[^\n]*?)\)/);
