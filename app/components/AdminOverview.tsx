@@ -14,7 +14,7 @@ const M_KEYS = [
 ] as const;
 
 interface Metrics {
-  [k: string]: { value: string; target: string; onTarget: boolean; sample?: boolean } | { used: number; total: number } | number;
+  [k: string]: { value: string; target: string; onTarget: boolean } | { used: number; total: number } | number;
 }
 
 export default function AdminOverview() {
@@ -52,7 +52,7 @@ export default function AdminOverview() {
 
       <div className="grid gap-4 lg:grid-cols-3">
         {M_KEYS.map(([k, label, sub]) => {
-          const v = m?.[k] as { value: string; target: string; onTarget: boolean; sample?: boolean } | undefined;
+          const v = m?.[k] as { value: string; target: string; onTarget: boolean } | undefined;
           return (
             <div key={k} className="rounded-2xl border border-white/10 bg-white/[0.05] p-5">
               <div className="flex items-baseline justify-between">
@@ -65,7 +65,6 @@ export default function AdminOverview() {
               <div className="mt-3 flex items-baseline gap-2">
                 <span className="font-serif text-[36px] text-white">{v?.value ?? "…"}</span>
                 <span className="text-[11.5px] text-white/50">{v?.target}</span>
-                {v?.sample && <span className="text-[11px] text-amber-200/80">sample</span>}
               </div>
             </div>
           );

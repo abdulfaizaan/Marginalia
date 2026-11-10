@@ -24,13 +24,14 @@ export function metrics() {
   const active = users.filter((u) => u.last_active > now - 30 * DAY);
   const marginCount = (db.prepare("SELECT COUNT(*) c FROM margins").get() as { c: number }).c;
   const activated = users.filter((u) => (notesByUser.get(u.id)?.words || 0) >= 200);
-  const totals = [...notesByUser.values()].reduce((a, n) => ({ words: a.words + n.words, ai: a.ai + 0 }), { words: 0, ai: 0 });
-  const origRatio = totals.words ? 1 : 0;
+  const totals = [...notesByUser.values()].reduce((a, n) => ({ words: a.words + n.words, ai: a.ai + n.ai_words }), { words: 0, ai: 0 });
+  // honest metric: share of written words that were typed by the human, not inserted by Marginalia
+  const origRatio = totals.words + totals.ai > 0 ? Math.round((totals.words / (totals.words + totals.ai)) * 100) : 0;
   const wk4 = users.filter((u) => now - u.joined_at >= 28 * DAY && u.last_active > now - 7 * DAY);
   const pct = (a: number, b: number) => (b ? Math.round((a / b) * 100) + "%" : "—");
   return {
     activation: { value: pct(activated.length, users.length || 1), target: "Target 55%", onTarget: (activated.length / (users.length || 1)) >= 0.55 },
-    originalThought: { value: origRatio ? "—" : "—", target: "Target 85% or more", onTarget: true, sample: true },
+    originalThought: { value: origRatio ? origRatio + "%" : "—", target: "Target 85% or more", onTarget: origRatio / 100 >= 0.85 },
     usefulness: { value: rated.up + rated.down ? Math.round((rated.up / (rated.up + rated.down)) * 100) + "%" : "—", target: "Target 60% or more", onTarget: rated.up + rated.down === 0 || rated.up / (rated.up + rated.down) >= 0.6 },
     retention: { value: pct(wk4.length, users.length || 1), target: "Target 25%", onTarget: (wk4.length / (users.length || 1)) >= 0.25 },
     notesWritten: { value: String(marginCount), target: "More every week", onTarget: marginCount > 0 },
