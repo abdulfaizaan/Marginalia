@@ -1,12 +1,12 @@
 # Marginalia
 
 The notebook that thinks *with* you, not *for* you. An AI notebook where the AI only speaks
-**in the margins** — with questions, challenges, error flags and directions (≤60 words), and
-step-through visuals. It never writes your note for you unless you explicitly open the hint
+**in the margins** — questions, challenges, error flags and directions (≤60 words), and
+step-through visuals. It never writes your note for you unless you explicitly walk the hint
 ladder in Ask mode.
 
-Built to the PRD (`Marginalia - Product Requirements Document.docx`) and the UI design
-(`Marginalia UI.pdf`) in this folder.
+- **Stack:** Next.js 16 (App Router, `cacheComponents`) + `node:sqlite` (built-in, zero DB to install)
+- **Deploy model:** single node (Dockerfile provided — see `docs/DEPLOY.md`). Not horizontal-scale.
 
 ## Run it
 
@@ -16,63 +16,78 @@ npm install
 npm run dev        # http://localhost:3000
 ```
 
-Requires Node 24+ (uses the built-in `node:sqlite` — no DB to install).
-Data lives in `app/data/marginalia.db` (created and seeded on first boot; delete the file to re-seed).
+Requires Node 24+. Data lives in `app/data/marginalia.db` (created and seeded on first boot;
+delete the file to re-seed).
 
-## Demo accounts (all password `demo1234`)
+## Environment
 
-| Account | Plan | Notes |
-|---|---|---|
-| maya@example.com | Plus (LAUNCH50) | LCS note with 3 seeded margin notes + hint chat |
-| dev@example.com | Free | — |
-| sam@example.com | Pro | — |
-| lee@example.com | Plus (LAUNCH50) | — |
-| jo@example.com | Free | — |
-| kai@example.com | Free | deletion requested (admin queue demo) |
-| ren / ana | Plus / Pro | — |
-| google-demo@marginalia.app | Free | the "Continue with Google" dummy OAuth account |
+`.env` (optional — the app runs fully offline with dummies):
 
-Admin console: `/admin/sign-in` — `admin@marginalia.app` / `admin1234` / code **123456**.
-Billing: `BILLING_MODE=dummy` — any 15–19-digit card is accepted (try `4242 4242 4242 4242`).
+| Var | Purpose |
+|---|---|
+| `GEMINI_API_KEY` | The one AI key (central routing). Any `dummy`/`placeholder` value routes to the built-in offline engine instead. |
+| `ADMIN_CODE` | 6-digit code required at `/admin/sign-in`. **Required in production** — boot throws without it (no default). |
+| `DATABASE_URL` | SQLite file path (default `data/marginalia.db`). Set per-instance in deployment. |
 
-## Dummy keys
+Crisis-safety routing in journal mode is hard-coded and never vendor-routed.
 
-`.env` ships with placeholder keys. The router (per PRD §11 + owner decision):
+## Demo accounts (all password `demo1234`, all free tier)
 
-- **Plus** users → OpenAI (`OPENAI_API_KEY`)
-- **Free/Pro** → Grok (XAI, `XAI_API_KEY`), falling back to Google AI Studio (`GEMINI_API_KEY`)
-- A key containing `dummy`/`placeholder` never leaves the machine — the **offline deterministic
-  engine** runs instead, so every P0 behavior (margin types, 60-word cap, hint ladder, journal
-  care) still works with no real keys.
-- Journaling crisis care is always hard-coded, never vendor-routed.
+| Account | Notes |
+|---|---|
+| `maya@example.com` | LCS note with seeded margin notes + hint chat |
+| `dev@example.com` | — |
+| `sam@example.com` | — |
+| `lee@example.com` | — |
+| `jo@example.com` | — |
+| `kai@example.com` | deletion requested (admin queue demo) |
+| `ren@example.com` / `ana@example.com` | — |
+| `google-demo@marginalia.app` | the "Continue with Google" dummy OAuth account |
 
-Replace keys in `.env` to switch to live providers — no code changes.
-
-## LAUNCH50
-
-Promo `LAUNCH50`: 50% off Plus ($4.99/mo × 3 months), first **100 users**, one redemption per
-account — enforced server-side in the checkout + `lib/plans.ts` (`enforcePromo`), pinned by the
-check script.
+Admin console: `/admin/sign-in` — `admin@marginalia.app` / `admin1234` / your `ADMIN_CODE`
+(demo default `123456`; set a real one in production and rotate it).
 
 ## What's inside
 
-- **Think with You** — pace (Slow/Normal/Frequent, footer pill), per-block margin notes
+- **Think mode** — pace (Slow/Normal/Frequent), per-block margin notes
   (question/challenge/error/direction, ≤60 words), reply/pin/dismiss/turn-into-thread,
-  probe selection (`Ctrl+Shift+P`), Ask rail (`Ctrl+/`)
-- **Ask mode** — 4-step hint ladder; Direct strictness + hide-AI export are Pro/Plus gated
-- **Step-through visuals** — DP grid (a11y: text description + STEP n OF M) for selections like
-  `ABCB against BDCB`, two-box sketches otherwise; pin-to-note inserts an AI-flagged line
-- **Exports** — `?fmt=print` (PDF via browser print, all plans), Word `.doc`, Markdown, with
-  hide-AI and margin-note footnotes
-- **Versions** — 7/30/unlimited day retention by plan, restore from note options
-- **Accounts** — email+password (scrypt), 13+ gate, dummy Google sign-in, data export
-  (`/api/account`), two-click plan cancel, deletion request → confirm flow
-- **Admin console** — 3-factor sign-in, metrics vs targets, users (no access to note content),
-  promo codes, AI-quality review queue (AI text only), full audit log
-- Limits: Free 30 margin notes + 3 visuals/month, enforced in the API
+  probe selection (`Ctrl+Shift+P`), Ask rail (`Ctrl+/`), strict gate (no answers, ever)
+- **Step-through visuals** — DP grid (a11y: text description + STEP n OF M), two-box sketches
+  otherwise; pin-to-note inserts an AI-flagged line
+- **Exports** — PDF (browser print, sandboxed CSP), Word `.doc`, Markdown, hide-AI + margin footnotes
+- **Versions** — 30-day retention, restore (confirm + auto-snapshot) from note options
+- **Accounts** — email+password (scrypt), 13+ gate, dummy Google sign-in, data export, deletion request → confirm flow
+- **Admin console** — code-gated sign-in, metrics (incl. real original-thought ratio),
+  users filter/search (no note content), AI-quality review queue (AI text only), audit log
+- **Limits (free tier, enforced server-side):** 200 margin notes + 40 visuals/month, 30-day versions
+- **Hardening:** rate limiting on auth (10/min) and AI (15/min) via `proxy.ts`; IDOR-ownership checks
+  on every note route; WAL + busy-timeout SQLite; periodic retention sweep on boot
 
 ## Checks
 
 ```bash
-npm run check     # 32 assertions over engine, promo rules, visualizer and exporters
+npm run check      # 91 assertions: engine, planners, exporters, rate limiter, parity/a11y/dead-code pins
+npm run check:http # 18 assertions against a real `next start` on an isolated DB (auth, IDOR, caps, admin)
+npm run build      # type-checked production build (Proxy registered)
 ```
+
+## Measured performance
+
+Load-tested on a dev laptop (loadtest profile, 20 connections, 5s each; single Node process):
+
+| Profile | req/s | p50 | p99 |
+|---|---:|---:|---:|
+| Library GET (session) | 205–282 | 66–78ms | 162–387ms |
+| Sign-in POST (rate-limited) | 195–216 | 80–87ms | 315–521ms |
+| Note-create POST (write) | 87–89 | 231–236ms | 306–323ms |
+
+Zero connection errors in every run. The write ceiling (~90 req/s) is the synchronous
+single-file SQLite `INSERT` path — appropriate for the single-node target; reads are indexed.
+Reproduce with `npm run loadtest`. Numbers are from one machine — verify on your own hardware.
+
+CI (`.github/workflows/ci.yml`) runs check + http + build + `npm audit` on every push/PR.
+
+## Operations
+
+Backups: `npm run backup` — consistent `VACUUM INTO` snapshot to `app/backups/`, 7 kept.
+Deployment, health checks and rollback: see `docs/DEPLOY.md`.

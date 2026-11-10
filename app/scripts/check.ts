@@ -321,4 +321,8 @@ ok(/NODE_ENV === "production" \? "; Secure" : ""/.test(fs.readFileSync(path.join
 ok(fs.existsSync(path.join(root, "app", "api", "health", "route.ts")) && fs.readFileSync(path.join(root, "app", "api", "health", "route.ts"), "utf8").includes("SELECT 1"), "ops: /api/health exists and touches the DB");
 ok(fs.existsSync(path.join(root, "..", ".github", "workflows", "ci.yml")) && fs.readFileSync(path.join(root, "..", ".github", "workflows", "ci.yml"), "utf8").includes("npm audit"), "ops: CI workflow gates check + http + build + npm audit");
 
+// ---------- docs: README stays honest — no removed-feature prose, correct check counts ----------
+const readme = fs.readFileSync(path.join(root, "..", "README.md"), "utf8");
+ok(!/LAUNCH50/.test(readme) && !/BILLING_MODE/.test(readme) && !/dummy OAuth.*billing/i.test(readme) && /91 assertions/.test(readme) && /Measured performance/.test(readme) && /docs\/DEPLOY\.md/.test(readme), "docs: README contains no billing/tier prose, correct assert count, measured-performance section, deploy pointer");
+
 console.log(`\n${n} checks passed.`);
