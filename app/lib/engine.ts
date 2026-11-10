@@ -147,7 +147,7 @@ function shortTopic(inp: AskInput): string {
 
 // ---------- Journaling (reflective listener + crisis care, PRD §8) ----------
 export interface JournalResp { body: string; kind: "care" | "reflect" }
-const CRISIS = /(kill myself|hurt myself|suicide|self[- ]?harm|can'?t go on|end it all|hopeless and|no reason to live)/i;
+const CRISIS = /(kill myself|hurt myself|suicide|self[- ]?harm|can'?t go on|end it all|hopeless and|no reason to live|want to die|end(ing)? my life|take my own life|(^|[^a-z])hopeless\b|don'?t want to (be here|live)|not want to (be here|live)|better off dead|want this to end)/i;
 export function journalRespond(entry: string, userMessage?: string): JournalResp {
   const src = entry + "\n" + (userMessage || "");
   if (CRISIS.test(src))

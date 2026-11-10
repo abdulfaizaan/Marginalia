@@ -45,6 +45,10 @@ ok(strict.kind === "hint", "strict: never the answer");
 ok(journalRespond("I can't go on anymore with this.").kind === "care", "journal crisis routes to care");
 ok(journalRespond("just a quiet day, thinking it over").kind === "reflect", "journal non-crisis reflects");
 ok(journalRespond("no reason to live").body.includes("988") || journalRespond("no reason to live").body.includes("emergency"), "care message carries resources");
+ok(journalRespond("I want to die tonight").kind === "care", "crisis: want to die → care (no false negative)");
+ok(journalRespond("thinking about ending my life").kind === "care", "crisis: end my life → care (no false negative)");
+ok(journalRespond("i could take my own life").kind === "care", "crisis: take my own life → care (no false negative)");
+ok(journalRespond("everything feels hopeless").kind === "care", "crisis: bare hopeless → care (no false negative)");
 
 // ---------- providers: BYOK routing ----------
 const { routeFor } = await import("../lib/providers.ts");
