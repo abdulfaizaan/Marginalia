@@ -301,4 +301,8 @@ const bare = ["Editor.tsx", "MarginPanel.tsx", "VisualView.tsx", "OptionsClient.
   });
 ok(bare.length === 0, `parity: every component with api() calls has catch coverage (bare: ${bare.join(", ") || "none"})`);
 
+// ---------- editor: leave-safety (flush on unload/visibility/unmount) — drift pin ----------
+const edSrc = fs.readFileSync(path.join(root, "components", "Editor.tsx"), "utf8");
+ok(/beforeunload/.test(edSrc) && /visibilitychange/.test(edSrc) && /flushPending/.test(edSrc) && /texts\.current = blkMap\(editorRef\.current \|\| ed\)/.test(edSrc), "editor: pending saves flush on leave; texts snapshot at send-time not post-await");
+
 console.log(`\n${n} checks passed.`);

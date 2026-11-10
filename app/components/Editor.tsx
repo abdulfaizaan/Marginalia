@@ -98,27 +98,49 @@ export default function Editor({ note, margins0, ask0, visuals, notebooks }: Pro
 
   const editorRef = useRef<TEditor | null>(null);
 
+  const doSave = useCallback((ed: TEditor, titleOverride?: string) => {
+    setSave("saving");
+    // snapshot NOW, not post-await: otherwise a save in flight leaves texts.current stale
+    // and the next evaluate re-sends already-seen blocks (duplicate margins).
+    // ponytail: on a failed save we keep the new snapshot — worst case one evaluate is
+    // skipped; revert would need a full doc diff, not worth it at this scale.
+    texts.current = blkMap(editorRef.current || ed);
+    api(`/api/notes/${note.id}`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        title: titleOverride ?? titleRef.current,
+        doc: ed.getJSON(),
+        text: docText(ed.getJSON() as never),
+        mode: modeRef.current,
+      }),
+    })
+      .then(() => setSave("saved"))
+      .catch(() => setSave("unsaved"));
+  }, [note.id]);
+
   const scheduleSave = useCallback((ed: TEditor, titleOverride?: string) => {
     setSave("unsaved");
     if (saveT.current) clearTimeout(saveT.current);
-    saveT.current = setTimeout(() => {
-      setSave("saving");
-      api(`/api/notes/${note.id}`, {
-        method: "PATCH",
-        body: JSON.stringify({
-          title: titleOverride ?? titleRef.current,
-          doc: ed.getJSON(),
-          text: docText(ed.getJSON() as never),
-          mode: modeRef.current,
-        }),
-      })
-        .then(() => {
-          texts.current = blkMap(ed);
-          setSave("saved");
-        })
-        .catch(() => setSave("unsaved"));
-    }, 900);
-  }, [note.id]);
+    saveT.current = setTimeout(() => doSave(ed, titleOverride), 900);
+  }, [doSave]);
+
+  // leave-safety: debounced timers die with the component — flush what's pending first.
+  useEffect(() => {
+    const flushPending = () => {
+      if (saveT.current) { clearTimeout(saveT.current); saveT.current = null; }
+      if (thinkT.current) { clearTimeout(thinkT.current); thinkT.current = null; }
+      if (editorRef.current) doSave(editorRef.current);
+    };
+    const onBeforeUnload = () => flushPending();
+    const onVisibility = () => { if (document.visibilityState === "hidden") flushPending(); };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("beforeunload", onBeforeUnload);
+      document.removeEventListener("visibilitychange", onVisibility);
+      flushPending(); // note switch / unmount: last pending edit goes out
+    };
+  }, [doSave]);
 
   const scheduleThink = useCallback(() => {
     if (thinkT.current) clearTimeout(thinkT.current);
