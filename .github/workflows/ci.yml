@@ -1,0 +1,26 @@
+# CI: the repo's own suites are the merge gate. Node 24 (matches dev/runtime: node:sqlite).
+name: ci
+on:
+  push:
+    branches: [main, audit-remediation]
+  pull_request:
+
+jobs:
+  check-and-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - run: npm ci
+      - run: npm run check
+      - run: npm run check:http
+      - run: npm run build
+      - name: dependency audit (high+ in prod deps)
+        run: npm audit --omit=dev --audit-level=high

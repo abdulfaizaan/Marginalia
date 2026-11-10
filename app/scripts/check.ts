@@ -316,4 +316,9 @@ ok(!/hasAi/.test(fs.readFileSync(path.join(root, "components", "AccountClient.ts
 ok(!/href="#"/.test(fs.readFileSync(path.join(root, "components", "AuthForm.tsx"), "utf8")) && !/href="#"/.test(fs.readFileSync(path.join(root, "app", "page.tsx"), "utf8")), "deadcode: no href=\"#\" placeholder links");
 ok(!/r\.capped/.test(fs.readFileSync(path.join(root, "components", "Editor.tsx"), "utf8")), "deadcode: unreachable r.capped branch removed (api() throws on 429 — the catch carries the cap message)");
 
+// ---------- prod cookie security + health endpoint — drift pin ----------
+ok(/NODE_ENV === "production" \? "; Secure" : ""/.test(fs.readFileSync(path.join(root, "lib", "auth.ts"), "utf8")), "security: session cookie gains Secure in production (shared attrs for set+clear)");
+ok(fs.existsSync(path.join(root, "app", "api", "health", "route.ts")) && fs.readFileSync(path.join(root, "app", "api", "health", "route.ts"), "utf8").includes("SELECT 1"), "ops: /api/health exists and touches the DB");
+ok(fs.existsSync(path.join(root, "..", ".github", "workflows", "ci.yml")) && fs.readFileSync(path.join(root, "..", ".github", "workflows", "ci.yml"), "utf8").includes("npm audit"), "ops: CI workflow gates check + http + build + npm audit");
+
 console.log(`\n${n} checks passed.`);

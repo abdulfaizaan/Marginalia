@@ -11,15 +11,17 @@ export async function createSession(userId: string) {
   db.prepare("INSERT INTO sessions VALUES(?,?,?,?)").run(token, userId, Date.now(), Date.now() + 30 * DAY);
   return token;
 }
+const COOKIE_ATTRS = `Path=/; HttpOnly; SameSite=Lax${process.env.NODE_ENV === "production" ? "; Secure" : ""}`;
+
 export function setSessionCookie(res: Response, token: string) {
-  // route handlers: attach via headers (Next 16-friendly)
+  // route handlers: attach via headers (Next 16-friendly). Secure only in prod — over plain HTTP the browser drops Secure cookies.
   const headers = new Headers(res.headers);
-  headers.append("set-cookie", `${SESSION_COOKIE}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${30 * 86400}`);
+  headers.append("set-cookie", `${SESSION_COOKIE}=${token}; ${COOKIE_ATTRS}; Max-Age=${30 * 86400}`);
   return new Response(res.body, { status: res.status, headers });
 }
 export async function clearSessionCookie(res: Response) {
   const headers = new Headers(res.headers);
-  headers.append("set-cookie", `${SESSION_COOKIE}=; Path=/; HttpOnly; Max-Age=0`);
+  headers.append("set-cookie", `${SESSION_COOKIE}=; ${COOKIE_ATTRS}; Max-Age=0`);
   return new Response(res.body, { status: res.status, headers });
 }
 
