@@ -81,9 +81,9 @@ function seedUsers(db: DatabaseSync) {
   const now = Date.now();
   const mk = (email: string, plan: string, promo: string | null, joined: number, status = "active") => {
     const id = uid();
-    db.prepare("INSERT INTO users VALUES(?,?,?,?,?,?,?,?,'active',1,'{}',?,?)").run(
-      id, email, hashPassword("demo1234"), email.split("@")[0], plan, "user", promo,
-      promo ? 3 : 0, joined, joined - 2 * DAY
+    // explicit column list: bare VALUES() drifts the moment SCHEMA gains a column (caught by check-http on a fresh DB)
+    db.prepare("INSERT INTO users(id,email,password,name,plan,role,promo,promo_months,status,age_ok,settings,joined_at,last_active) VALUES(?,?,?,?,?,?,?,?,?,1,'{}',?,?)").run(
+      id, email, hashPassword("demo1234"), email.split("@")[0], plan, "user", promo, promo ? 3 : 0, status, joined, joined - 2 * DAY
     );
     return id;
   };
@@ -96,8 +96,8 @@ function seedUsers(db: DatabaseSync) {
   mk("ren@example.com", "free", null, now - 38 * DAY);
   mk("ana@example.com", "free", null, now - 36 * DAY);
   const admin = uid();
-  db.prepare("INSERT INTO users VALUES(?,?,?,?,?,?,?,0,'active',1,'{}',?,?)").run(
-    admin, "admin@marginalia.app", hashPassword("admin1234"), "Admin", "user", "admin", null, now - 90 * DAY, now - DAY
+  db.prepare("INSERT INTO users(id,email,password,name,plan,role,promo,promo_months,status,age_ok,settings,joined_at,last_active) VALUES(?,?,?,?,?,?,NULL,0,'active',1,'{}',?,?)").run(
+    admin, "admin@marginalia.app", hashPassword("admin1234"), "Admin", "user", "admin", now - 90 * DAY, now - DAY
   );
 
   // notebooks for maya
