@@ -325,4 +325,11 @@ ok(fs.existsSync(path.join(root, "..", ".github", "workflows", "ci.yml")) && fs.
 const readme = fs.readFileSync(path.join(root, "..", "README.md"), "utf8");
 ok(!/LAUNCH50/.test(readme) && !/BILLING_MODE/.test(readme) && !/dummy OAuth.*billing/i.test(readme) && /91 assertions/.test(readme) && /Measured performance/.test(readme) && /docs\/DEPLOY\.md/.test(readme), "docs: README contains no billing/tier prose, correct assert count, measured-performance section, deploy pointer");
 
+// ---------- theme: no hard-coded companions to theme-flipping vars (dark-mode invisible-button bug) ----------
+ok(/bg-btn-dark text-btn-dark-text/.test(comps("ui.tsx")) && !/bg-btn-dark text-white/.test(comps("ui.tsx")), "theme: btnDark text follows the flipping --btn-dark-text var, not literal white");
+ok(!/bg-btn-dark[\s\S]{0,120}text-white\b/.test(comps("Editor.tsx")), "theme: Editor probe tooltip uses btn-dark-text pair");
+const landing = fs.readFileSync(path.join(root, "app", "page.tsx"), "utf8");
+ok(!/bg-white text-ink/.test(landing) && !/style=\{\{ color: "#f3eee3"/.test(landing) && /text-btn-dark-text/.test(landing), "theme: landing banner text/button follow --btn-dark-text, no hard-coded white");
+ok(/bg-accent text-accent-ink/.test(comps("ui.tsx")) && !/bg-accent text-white\b/.test(comps("MarginPanel.tsx")), "theme: accent buttons/chips use --accent-ink (dark ink on light orange in dark mode)");
+
 console.log(`\n${n} checks passed.`);

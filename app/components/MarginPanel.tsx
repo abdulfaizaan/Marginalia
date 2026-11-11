@@ -190,7 +190,7 @@ function MarginCard({ m, noteId, act, busy, setReplyTo, replyTo, setMargins, rou
   return (
     <Card className={`mb-3 break-inside-avoid p-3.5 ${m.status === "pinned" ? "border-accent/60" : ""}`}>
       <div className="flex items-center gap-2">
-        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent text-[11px] font-bold text-white">{m.num}</span>
+        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent text-[11px] font-bold text-accent-ink">{m.num}</span>
         <Chip kind={m.type} small>{chipLabel(m.type)}</Chip>
         {m.status === "pinned" && <span className="ml-auto text-[11px] font-semibold text-accent">Pinned</span>}
       </div>

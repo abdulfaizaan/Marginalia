@@ -107,12 +107,12 @@ export default function Landing() {
         </div>
         <div className="mt-14 flex flex-col justify-between gap-6 rounded-[22px] bg-[var(--btn-dark)] px-8 py-9 md:flex-row md:items-center">
           <div>
-            <div className="font-serif text-[30px] font-medium leading-tight text-[var(--btn-dark-text,#f3eee3)]" style={{ color: "#f3eee3" }}>
+            <div className="font-serif text-[30px] font-medium leading-tight text-btn-dark-text">
               Marginalia is free.
             </div>
-            <div className="mt-2 text-[14px] text-white/70">Fair-use AI limits for everyone. Where is the catch? There isn't one.</div>
+            <div className="mt-2 text-[14px] text-btn-dark-text/70">Fair-use AI limits for everyone. Where is the catch? There isn't one.</div>
           </div>
-          <Link href="/sign-in?mode=signup" className={btnGhost + " !border-0 bg-white text-ink"}>
+          <Link href="/sign-in?mode=signup" className={btnGhost + " !border-0 bg-btn-dark-text text-btn-dark"}>
             Start writing free
           </Link>
         </div>

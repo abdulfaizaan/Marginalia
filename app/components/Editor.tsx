@@ -391,7 +391,7 @@ export default function Editor({ note, margins0, ask0, visuals, notebooks }: Pro
         <button
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => void doProbe()}
-          className="fixed z-50 rounded-lg bg-btn-dark px-3 py-1.5 text-[12.5px] font-bold text-white shadow-lg"
+          className="fixed z-50 rounded-lg bg-btn-dark px-3 py-1.5 text-[12.5px] font-bold text-btn-dark-text shadow-lg"
           style={{ left: Math.min(probe.x, (typeof window !== "undefined" ? window.innerWidth - 120 : 600)), top: probe.y + 6 }}
         >
           Probe this

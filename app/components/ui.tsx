@@ -43,11 +43,11 @@ export function Chip({ kind, children, small = false }: { kind: string; children
 
 export const btn =
   "inline-flex items-center justify-center gap-2 rounded-[10px] font-semibold transition-[filter,background] active:scale-[.99] disabled:opacity-50 disabled:pointer-events-none";
-export const btnPrimary = `${btn} bg-accent text-white px-5 h-11 text-[14.5px] hover:brightness-110`;
-export const btnDark = `${btn} bg-btn-dark text-white px-5 h-11 text-[14.5px] hover:brightness-125`;
+export const btnPrimary = `${btn} bg-accent text-accent-ink px-5 h-11 text-[14.5px] hover:brightness-110`;
+export const btnDark = `${btn} bg-btn-dark text-btn-dark-text px-5 h-11 text-[14.5px] hover:brightness-125`;
 export const btnGhost = `${btn} border border-line bg-card text-ink px-4 h-10 text-[14px] hover:bg-paper-soft`;
 export const btnMini = `${btn} border border-line bg-card text-ink px-3 h-8 text-[12.5px] hover:bg-paper-soft`;
-export const btnBlueMini = `${btn} bg-accent text-white px-3.5 h-9 text-[13px] hover:brightness-110`;
+export const btnBlueMini = `${btn} bg-accent text-accent-ink px-3.5 h-9 text-[13px] hover:brightness-110`;
 export const btnLink = "text-accent font-semibold hover:underline";
 
 export function Card({ children, className = "", style }: { children: ReactNode; className?: string; style?: CSSProperties }) {
